@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://payroll.example.ca/schema/v1"
+           xmlns="https://payroll.example.ca/schema/v1"
+           elementFormDefault="qualified">
+
+  <xs:element name="payroll">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="employer" type="EmployerType"/>
+        <xs:element name="employee" type="EmployeeType"/>
+        <xs:element name="payPeriod" type="PayPeriodType"/>
+        <xs:element name="earnings" type="EarningsType"/>
+        <xs:element name="deductions" type="DeductionsType"/>
+        <xs:element name="netPay" type="MoneyType"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="EmployerType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EmployeeType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="sin" type="SinType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PayPeriodType">
+    <xs:sequence>
+      <xs:element name="startDate" type="xs:date"/>
+      <xs:element name="endDate" type="xs:date"/>
+      <xs:element name="payDate" type="xs:date"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EarningsType">
+    <xs:sequence>
+      <xs:element name="grossPay" type="MoneyType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="DeductionsType">
+    <xs:sequence>
+      <xs:element name="cpp" type="MoneyType"/>
+      <xs:element name="ei" type="MoneyType"/>
+      <xs:element name="incomeTax" type="MoneyType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="MoneyType">
+    <xs:restriction base="xs:decimal">
+      <xs:fractionDigits value="2"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SinType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d{3}-\d{3}-\d{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pay Stub</title>
+  <style>
+    @page {
+      size: letter;
+      margin: 18mm;
+      margin-top: 42mm;
+    }
+
+    body {
+      font-family: "DejaVu Sans", sans-serif;
+      font-size: 10pt;
+      color: #111;
+    }
+
+    /* Fixed headers repeat on every page in WeasyPrint */
+    .page-header {
+      position: fixed;
+      top: -34mm;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 3mm;
+    }
+
+    .client-logo {
+      max-height: 16mm;
+      max-width: 45mm;
+    }
+
+    .provider-brand {
+      display: flex;
+      align-items: flex-start;
+      gap: 3mm;
+      text-align: right;
+    }
+
+    .provider-logo {
+      max-height: 12mm;
+      max-width: 12mm;
+      margin-top: 1mm;
+    }
+
+    .provider-details {
+      line-height: 1.35;
+    }
+
+    .provider-name {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #111;
+      display: block;
+      margin-bottom: 1mm;
+    }
+
+    .provider-contact,
+    .provider-address {
+      font-size: 8pt;
+      color: #444;
+      display: block;
+    }
+
+    h1 {
+      font-size: 16pt;
+      margin: 0 0 6mm 0;
+    }
+
+    .section {
+      margin-top: 8mm;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 3mm 4mm;
+      text-align: left;
+    }
+
+    th {
+      background: #f3f3f3;
+    }
+
+    td.amount {
+      text-align: right;
+      width: 35mm;
+    }
+
+    .net-pay {
+      margin-top: 6mm;
+      font-size: 12pt;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <div class="client-brand">
+      {% if client_logo_url %}
+      <img class="client-logo" src="{{ client_logo_url }}" alt="Client logo">
+      {% endif %}
+    </div>
+    <div class="provider-brand">
+      {% if provider_logo_url %}
+      <img class="provider-logo" src="{{ provider_logo_url }}" alt="Gamma Personnel logo">
+      {% endif %}
+      <div class="provider-details">
+        <span class="provider-name">{{ provider_name }}</span>
+        <span class="provider-contact">{{ provider_contact_name }}</span>
+        {% for line in provider_address_lines %}
+        <span class="provider-address">{{ line }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <h1>Pay Stub</h1>
+
+  <div class="section">
+    <strong>Employee:</strong> {{ employee_name }}<br>
+    <strong>SIN:</strong> {{ employee_sin }}<br>
+    <strong>Pay period:</strong> {{ period_start }} to {{ period_end }}<br>
+    <strong>Pay date:</strong> {{ pay_date }}
+  </div>
+
+  <div class="section">
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="amount">Amount (CAD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Gross pay</td>
+          <td class="amount">{{ gross_pay | money }}</td>
+        </tr>
+        <tr>
+          <td>CPP</td>
+          <td class="amount">{{ cpp | money }}</td>
+        </tr>
+        <tr>
+          <td>EI</td>
+          <td class="amount">{{ ei | money }}</td>
+        </tr>
+        <tr>
+          <td>Income tax deducted (Box 22)</td>
+          <td class="amount">{{ income_tax | money }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="net-pay">Net pay: {{ net_pay | money }}</p>
+</body>
+</html>

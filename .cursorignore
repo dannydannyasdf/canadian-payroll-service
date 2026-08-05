@@ -1,0 +1,29 @@
+# Virtual Environments (The biggest credit drains)
+.venv/
+venv/
+env/
+ENV/
+.env/
+
+# Python Cache & Compiled Files
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# Local Data and Model Checkpoints (If doing AI/Data Science)
+*.csv
+*.xlsx
+*.parquet
+*.pkl
+*.pickle
+*.h5
+*.pt
+*.pth
+*.onnx
+dataset/
+data/

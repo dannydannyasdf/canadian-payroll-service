@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<payroll xmlns="https://payroll.example.ca/schema/v1">
+  <employer>
+    <name>Acme Personnel Inc.</name>
+  </employer>
+  <employee>
+    <name>Janed Freelancer</name>
+    <sin>123-456-789</sin>
+  </employee>
+  <payPeriod>
+    <startDate>2026-01-01</startDate>
+    <endDate>2026-01-15</endDate>
+    <payDate>2026-01-20</payDate>
+  </payPeriod>
+  <earnings>
+    <grossPay>5000.00</grossPay>
+  </earnings>
+  <deductions>
+    <cpp>288.00</cpp>
+    <ei>82.00</ei>
+    <incomeTax>1100.00</incomeTax>
+  </deductions>
+  <netPay>3530.00</netPay>
+</payroll>
