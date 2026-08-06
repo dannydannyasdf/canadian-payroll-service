@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pay Stub Demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #5a6472;
+      --border: #d8dee6;
+      --accent: #1f6feb;
+      --accent-pressed: #1558bc;
+      --error-bg: #fdecea;
+      --error-text: #b42318;
+      --success-bg: #ecfdf3;
+      --success-text: #067647;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      padding: 16px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+
+    .wrap {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 16px;
+    }
+
+    .logo-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .client-logo {
+      max-height: 52px;
+      max-width: 46%;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .provider-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 52%;
+    }
+
+    .provider-logo {
+      max-height: 40px;
+      width: auto;
+      flex-shrink: 0;
+      object-fit: contain;
+    }
+
+    .provider-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--text);
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      margin: 0 0 6px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin: 0;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .card h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      font-size: 16px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .row > div { min-width: 0; }
+
+    .row label { font-size: 0.82rem; }
+    .row input { margin-bottom: 0; }
+
+    button[type="submit"] {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 14px 16px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button[type="submit"]:active {
+      background: var(--accent-pressed);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .message {
+      display: none;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 14px;
+      font-size: 0.92rem;
+    }
+
+    .message.error {
+      display: block;
+      background: var(--error-bg);
+      color: var(--error-text);
+    }
+
+    .message.success {
+      display: block;
+      background: var(--success-bg);
+      color: var(--success-text);
+    }
+
+    .actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .actions a, .actions button.secondary {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fff;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #pdf-frame {
+      display: none;
+      width: 100%;
+      height: 70vh;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-top: 12px;
+      background: #fff;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      background: var(--bg);
+      border-radius: 999px;
+      padding: 4px 8px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo-bar">
+        <img class="client-logo" src="/images/Anonymous_Logo.jpg" alt="Client logo">
+        <div class="provider-brand">
+          <img class="provider-logo" src="/images/Gamma_heads_Logo_Black.jpg" alt="Gamma Personnel logo">
+          <span class="provider-name">Gamma Personnel Inc.</span>
+        </div>
+      </div>
+      <div class="badge">Internal demo</div>
+      <h1>Generate pay stub</h1>
+      <p class="subtitle">Submit a sample pay period and open the PDF. For local testing only.</p>
+    </header>
+
+    <div id="message" class="message" role="alert"></div>
+
+    <form id="payroll-form">
+      <div class="card">
+        <h2>Sample data</h2>
+        <label for="sample-select">Load defaults</label>
+        <select id="sample-select">
+          <option value="week1">Week 1 (Jan 1 – 7)</option>
+          <option value="week2">Week 2 (Jan 8 – 14)</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <h2>Employer & employee</h2>
+        <label for="employer-name">Employer</label>
+        <input id="employer-name" name="employerName" required>
+
+        <label for="employee-name">Employee</label>
+        <input id="employee-name" name="employeeName" required>
+
+        <label for="employee-sin">SIN</label>
+        <input id="employee-sin" name="employeeSin" pattern="\d{3}-\d{3}-\d{3}" required>
+      </div>
+
+      <div class="card">
+        <h2>Pay period</h2>
+        <div class="row">
+          <div>
+            <label for="start-date">Start</label>
+            <input id="start-date" name="startDate" type="date" required>
+          </div>
+          <div>
+            <label for="end-date">End</label>
+            <input id="end-date" name="endDate" type="date" required>
+          </div>
+        </div>
+        <label for="pay-date">Pay date</label>
+        <input id="pay-date" name="payDate" type="date" required>
+      </div>
+
+      <div class="card">
+        <h2>Amounts (CAD)</h2>
+        <label for="gross-pay">Gross pay</label>
+        <input id="gross-pay" name="grossPay" inputmode="decimal" required>
+
+        <div class="row">
+          <div>
+            <label for="cpp">CPP</label>
+            <input id="cpp" name="cpp" inputmode="decimal" required>
+          </div>
+          <div>
+            <label for="ei">EI</label>
+            <input id="ei" name="ei" inputmode="decimal" required>
+          </div>
+        </div>
+
+        <label for="income-tax">Income tax (Box 22)</label>
+        <input id="income-tax" name="incomeTax" inputmode="decimal" required>
+
+        <label for="net-pay">Net pay</label>
+        <input id="net-pay" name="netPay" inputmode="decimal" required>
+      </div>
+
+      <button type="submit" id="submit-btn">Generate PDF</button>
+    </form>
+
+    <div id="result" class="card" hidden>
+      <h2>Result</h2>
+      <p id="ytd-summary"></p>
+      <div class="actions">
+        <a id="open-pdf" href="#" target="_blank" rel="noopener">Open PDF</a>
+        <a id="download-pdf" href="#" download="pay-stub.pdf">Download PDF</a>
+      </div>
+      <iframe id="pdf-frame" title="Pay stub preview"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const samples = {
+      week1: {{ week1_json | safe }},
+      week2: {{ week2_json | safe }},
+    };
+
+    const form = document.getElementById("payroll-form");
+    const sampleSelect = document.getElementById("sample-select");
+    const message = document.getElementById("message");
+    const submitBtn = document.getElementById("submit-btn");
+    const result = document.getElementById("result");
+    const ytdSummary = document.getElementById("ytd-summary");
+    const openPdf = document.getElementById("open-pdf");
+    const downloadPdf = document.getElementById("download-pdf");
+    const pdfFrame = document.getElementById("pdf-frame");
+
+    let pdfObjectUrl = null;
+
+    function showMessage(text, type) {
+      message.textContent = text;
+      message.className = "message " + type;
+    }
+
+    function clearMessage() {
+      message.textContent = "";
+      message.className = "message";
+    }
+
+    function fillForm(sample) {
+      document.getElementById("employer-name").value = sample.employer.name;
+      document.getElementById("employee-name").value = sample.employee.name;
+      document.getElementById("employee-sin").value = sample.employee.sin;
+      document.getElementById("start-date").value = sample.payPeriod.startDate;
+      document.getElementById("end-date").value = sample.payPeriod.endDate;
+      document.getElementById("pay-date").value = sample.payPeriod.payDate;
+      document.getElementById("gross-pay").value = sample.earnings.grossPay;
+      document.getElementById("cpp").value = sample.deductions.cpp;
+      document.getElementById("ei").value = sample.deductions.ei;
+      document.getElementById("income-tax").value = sample.deductions.incomeTax;
+      document.getElementById("net-pay").value = sample.netPay;
+    }
+
+    function buildPayload() {
+      return {
+        employer: { name: document.getElementById("employer-name").value.trim() },
+        employee: {
+          name: document.getElementById("employee-name").value.trim(),
+          sin: document.getElementById("employee-sin").value.trim(),
+        },
+        payPeriod: {
+          startDate: document.getElementById("start-date").value,
+          endDate: document.getElementById("end-date").value,
+          payDate: document.getElementById("pay-date").value,
+        },
+        earnings: { grossPay: document.getElementById("gross-pay").value.trim() },
+        deductions: {
+          cpp: document.getElementById("cpp").value.trim(),
+          ei: document.getElementById("ei").value.trim(),
+          incomeTax: document.getElementById("income-tax").value.trim(),
+        },
+        netPay: document.getElementById("net-pay").value.trim(),
+      };
+    }
+
+    function setPdfLinks(base64Pdf) {
+      if (pdfObjectUrl) {
+        URL.revokeObjectURL(pdfObjectUrl);
+      }
+      const bytes = Uint8Array.from(atob(base64Pdf), (c) => c.charCodeAt(0));
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      pdfObjectUrl = URL.createObjectURL(blob);
+      openPdf.href = pdfObjectUrl;
+      downloadPdf.href = pdfObjectUrl;
+      pdfFrame.src = pdfObjectUrl;
+      pdfFrame.style.display = "block";
+      result.hidden = false;
+    }
+
+    sampleSelect.addEventListener("change", () => {
+      fillForm(samples[sampleSelect.value]);
+      clearMessage();
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearMessage();
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Generating…";
+
+      try {
+        const response = await fetch("/payroll/pay-stub", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(buildPayload()),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const detail = typeof data.detail === "string"
+            ? data.detail
+            : JSON.stringify(data.detail);
+          showMessage(detail || "Request failed.", "error");
+          return;
+        }
+
+        const ytd = data.cumulative.totals;
+        showMessage("Pay stub generated successfully.", "success");
+        ytdSummary.textContent =
+          "YTD gross: $" + ytd.grossPay +
+          " · YTD net: $" + ytd.netPay +
+          " (tax year " + data.cumulative.taxYear + ")";
+        setPdfLinks(data.payStubPdfBase64);
+      } catch (err) {
+        showMessage("Network error: " + err.message, "error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Generate PDF";
+      }
+    });
+
+    fillForm(samples.week1);
+  </script>
+</body>
+</html>
