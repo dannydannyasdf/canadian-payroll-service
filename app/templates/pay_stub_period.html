@@ -1,0 +1,46 @@
+<h2 class="period-title">Pay period: {{ period_start }} to {{ period_end }}</h2>
+
+<div class="section">
+  <strong>Employee:</strong> {{ employee_name }}<br>
+  <strong>SIN:</strong> {{ employee_sin }}<br>
+  <strong>Pay date:</strong> {{ pay_date }}
+</div>
+
+<div class="section">
+  <table class="pay-table">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="amount">This period</th>
+        <th class="amount ytd">YTD ({{ tax_year }})</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Gross pay</td>
+        <td class="amount">{{ gross_pay | money }}</td>
+        <td class="amount ytd">{{ ytd_gross_pay | money }}</td>
+      </tr>
+      <tr>
+        <td>CPP</td>
+        <td class="amount">{{ cpp | money }}</td>
+        <td class="amount ytd">{{ ytd_cpp | money }}</td>
+      </tr>
+      <tr>
+        <td>EI</td>
+        <td class="amount">{{ ei | money }}</td>
+        <td class="amount ytd">{{ ytd_ei | money }}</td>
+      </tr>
+      <tr>
+        <td>Income tax deducted (Box 22)</td>
+        <td class="amount">{{ income_tax | money }}</td>
+        <td class="amount ytd">{{ ytd_income_tax | money }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="net-pay">
+  Net pay (this period): {{ net_pay | money }}<br>
+  Net pay (YTD): {{ ytd_net_pay | money }}
+</p>

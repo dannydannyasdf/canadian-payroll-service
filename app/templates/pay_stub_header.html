@@ -1,0 +1,27 @@
+<div class="page-header">
+  <table class="header-table">
+    <tr>
+      <td class="header-left">
+        {% if client_logo_url %}
+        <img class="client-logo" src="{{ client_logo_url }}" alt="Client logo">
+        {% endif %}
+      </td>
+      <td class="header-right">
+        <div class="provider-brand">
+          {% if provider_logo_url %}
+          <div class="provider-logo-wrap">
+            <img class="provider-logo" src="{{ provider_logo_url }}" alt="Gamma Personnel logo">
+          </div>
+          {% endif %}
+          <div class="provider-details">
+            <span class="provider-name">{{ provider_name }}</span>
+            <span class="provider-contact">{{ provider_contact_name }}</span>
+            {% for line in provider_address_lines %}
+            <span class="provider-address">{{ line }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>

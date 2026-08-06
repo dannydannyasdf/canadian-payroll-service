@@ -28,6 +28,7 @@ class CumulativeResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     tax_year: int = Field(alias="taxYear")
+    employee_id: int = Field(alias="employeeId")
     employer_name: str = Field(alias="employerName")
     employee_name: str = Field(alias="employeeName")
     employee_sin: str = Field(alias="employeeSin")

@@ -1,0 +1,151 @@
+<style>
+  @page {
+    size: letter;
+    margin: 18mm;
+    margin-top: 42mm;
+  }
+
+  body {
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 10pt;
+    color: #111;
+  }
+
+  .page-header {
+    position: fixed;
+    top: -34mm;
+    left: 0;
+    right: 0;
+    width: 100%;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 3mm;
+  }
+
+  .header-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .header-table td {
+    border: none;
+    padding: 0;
+    vertical-align: top;
+  }
+
+  .header-left {
+    width: 50%;
+    text-align: left;
+  }
+
+  .header-right {
+    width: 50%;
+    text-align: right;
+  }
+
+  .client-logo {
+    max-height: 16mm;
+    max-width: 45mm;
+  }
+
+  .provider-brand {
+    display: inline-table;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .provider-logo-wrap,
+  .provider-details {
+    display: table-cell;
+    vertical-align: middle;
+  }
+
+  .provider-logo-wrap {
+    padding-right: 3mm;
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  .provider-logo {
+    height: calc(1mm + 11pt * 1.35 + 8pt * 1.35 * 3);
+    max-height: calc(1mm + 11pt * 1.35 + 8pt * 1.35 * 3);
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
+
+  .provider-details {
+    line-height: 1.35;
+  }
+
+  .provider-name {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #111;
+    display: block;
+    margin-bottom: 1mm;
+  }
+
+  .provider-contact,
+  .provider-address {
+    font-size: 8pt;
+    color: #444;
+    display: block;
+  }
+
+  h1 {
+    font-size: 16pt;
+    margin: 0 0 6mm 0;
+  }
+
+  .section {
+    margin-top: 8mm;
+  }
+
+  table.pay-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  table.pay-table th,
+  table.pay-table td {
+    border: 1px solid #ccc;
+    padding: 3mm 4mm;
+    text-align: left;
+  }
+
+  table.pay-table th {
+    background: #f3f3f3;
+  }
+
+  table.pay-table td.amount {
+    text-align: right;
+    width: 30mm;
+  }
+
+  table.pay-table td.ytd {
+    width: 30mm;
+  }
+
+  .net-pay {
+    margin-top: 6mm;
+    font-size: 12pt;
+    font-weight: bold;
+  }
+
+  .period-title {
+    font-size: 12pt;
+    margin: 8mm 0 4mm;
+  }
+
+  .period-divider {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 8mm 0;
+  }
+
+  .period-block {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+</style>

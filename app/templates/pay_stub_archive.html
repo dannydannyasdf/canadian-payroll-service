@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pay Stub Archive</title>
+  {% include "pay_stub_styles.html" %}
+  <style>
+    @page {
+      size: letter;
+      margin: 18mm;
+      margin-top: 42mm;
+      margin-bottom: 22mm;
+      @bottom-center {
+        content: "page " counter(page) " of " counter(pages);
+        font-family: "DejaVu Sans", sans-serif;
+        font-size: 9pt;
+        color: #555;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include "pay_stub_header.html" %}
+  <h1>Pay Stubs — {{ tax_year }}</h1>
+  {% for stub in stubs %}
+  {% if not loop.first %}
+  <hr class="period-divider">
+  {% endif %}
+  <section class="period-block">
+    {% with employee_name=stub.employee_name, employee_sin=stub.employee_sin,
+            period_start=stub.period_start, period_end=stub.period_end, pay_date=stub.pay_date,
+            tax_year=stub.tax_year, gross_pay=stub.gross_pay, cpp=stub.cpp, ei=stub.ei,
+            income_tax=stub.income_tax, net_pay=stub.net_pay,
+            ytd_gross_pay=stub.ytd_gross_pay, ytd_cpp=stub.ytd_cpp, ytd_ei=stub.ytd_ei,
+            ytd_income_tax=stub.ytd_income_tax, ytd_net_pay=stub.ytd_net_pay %}
+    {% include "pay_stub_period.html" %}
+    {% endwith %}
+  </section>
+  {% endfor %}
+</body>
+</html>

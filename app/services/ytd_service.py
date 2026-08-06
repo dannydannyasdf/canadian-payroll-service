@@ -128,6 +128,7 @@ def accumulate_ytd(db: Session, payload: PayrollPayload) -> CumulativeResponse:
 
     return CumulativeResponse(
         taxYear=tax_year,
+        employeeId=employee.id,
         employerName=payload.employer.name,
         employeeName=employee.name,
         employeeSin=employee.sin,

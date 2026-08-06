@@ -28,21 +28,32 @@ def _format_money(value: Decimal) -> str:
     return f"${value:,.2f}"
 
 
-def render_pay_stub_pdf(payroll_data: dict) -> bytes:
+def _template_env() -> Environment:
     env = Environment(
         loader=FileSystemLoader(TEMPLATES_DIR),
         autoescape=select_autoescape(["html", "xml"]),
     )
     env.filters["money"] = _format_money
+    return env
 
-    template = env.get_template("pay_stub.html")
-    html = template.render(
-        client_logo_url=_logo_uri(CLIENT_LOGO_PATH),
-        provider_logo_url=_logo_uri(PROVIDER_LOGO_PATH),
-        provider_name=PROVIDER_NAME,
-        provider_contact_name=PROVIDER_CONTACT_NAME,
-        provider_address_lines=PROVIDER_ADDRESS_LINES,
-        **payroll_data,
-    )
 
+def _brand_context() -> dict:
+    return {
+        "client_logo_url": _logo_uri(CLIENT_LOGO_PATH),
+        "provider_logo_url": _logo_uri(PROVIDER_LOGO_PATH),
+        "provider_name": PROVIDER_NAME,
+        "provider_contact_name": PROVIDER_CONTACT_NAME,
+        "provider_address_lines": PROVIDER_ADDRESS_LINES,
+    }
+
+
+def render_pay_stub_pdf(payroll_data: dict) -> bytes:
+    template = _template_env().get_template("pay_stub.html")
+    html = template.render(**_brand_context(), **payroll_data)
+    return HTML(string=html, base_url=str(TEMPLATES_DIR)).write_pdf()
+
+
+def render_pay_stub_archive_pdf(stubs: list[dict]) -> bytes:
+    template = _template_env().get_template("pay_stub_archive.html")
+    html = template.render(stubs=stubs, tax_year=stubs[-1]["tax_year"], **_brand_context())
     return HTML(string=html, base_url=str(TEMPLATES_DIR)).write_pdf()

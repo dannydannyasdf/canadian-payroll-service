@@ -161,6 +161,25 @@
       padding: 14px 16px;
       cursor: pointer;
       touch-action: manipulation;
+      margin-bottom: 10px;
+    }
+
+    button.secondary-action {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 12px 16px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button.secondary-action:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
     button[type="submit"]:active {
@@ -198,7 +217,7 @@
       margin-top: 12px;
     }
 
-    .actions a, .actions button.secondary {
+    .actions a, .actions button.secondary-action {
       display: block;
       text-align: center;
       text-decoration: none;
@@ -210,6 +229,7 @@
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
+      width: 100%;
     }
 
     #pdf-frame {
@@ -293,29 +313,30 @@
 
       <div class="card">
         <h2>Amounts (CAD)</h2>
-        <label for="gross-pay">Gross pay</label>
-        <input id="gross-pay" name="grossPay" inputmode="decimal" required>
+        <label for="amount-gross">Gross pay</label>
+        <input id="amount-gross" data-recalc-net name="grossPay" inputmode="decimal" required>
 
         <div class="row">
           <div>
-            <label for="cpp">CPP</label>
-            <input id="cpp" name="cpp" inputmode="decimal" required>
+            <label for="amount-cpp">CPP</label>
+            <input id="amount-cpp" data-recalc-net name="cpp" inputmode="decimal" required>
           </div>
           <div>
-            <label for="ei">EI</label>
-            <input id="ei" name="ei" inputmode="decimal" required>
+            <label for="amount-ei">EI</label>
+            <input id="amount-ei" data-recalc-net name="ei" inputmode="decimal" required>
           </div>
         </div>
 
-        <label for="income-tax">Income tax (Box 22)</label>
-        <input id="income-tax" name="incomeTax" inputmode="decimal" required>
+        <label for="amount-income-tax">Income tax (Box 22)</label>
+        <input id="amount-income-tax" data-recalc-net name="incomeTax" inputmode="decimal" required>
 
-        <label for="net-pay">Net pay (calculated)</label>
+        <label for="amount-net">Net pay (calculated)</label>
         <p class="field-hint">Gross pay minus CPP, EI, and income tax.</p>
-        <input id="net-pay" name="netPay" inputmode="decimal" readonly required>
+        <input id="amount-net" name="netPay" inputmode="decimal" readonly required>
       </div>
 
       <button type="submit" id="submit-btn">Generate PDF</button>
+      <button type="button" id="download-all-btn" class="secondary-action">Download All Periods</button>
     </form>
 
     <div id="result" class="card" hidden>
@@ -324,6 +345,7 @@
       <div class="actions">
         <a id="open-pdf" href="#" target="_blank" rel="noopener">Open PDF</a>
         <a id="download-pdf" href="#" download="pay-stub.pdf">Download PDF</a>
+        <button type="button" id="download-all-result-btn" class="secondary-action">Download All Periods</button>
       </div>
       <iframe id="pdf-frame" title="Pay stub preview"></iframe>
     </div>
@@ -340,13 +362,22 @@
     const sampleSelect = document.getElementById("sample-select");
     const message = document.getElementById("message");
     const submitBtn = document.getElementById("submit-btn");
+    const downloadAllBtn = document.getElementById("download-all-btn");
+    const downloadAllResultBtn = document.getElementById("download-all-result-btn");
     const result = document.getElementById("result");
     const ytdSummary = document.getElementById("ytd-summary");
     const openPdf = document.getElementById("open-pdf");
     const downloadPdf = document.getElementById("download-pdf");
     const pdfFrame = document.getElementById("pdf-frame");
+    const fieldGross = document.getElementById("amount-gross");
+    const fieldCpp = document.getElementById("amount-cpp");
+    const fieldEi = document.getElementById("amount-ei");
+    const fieldIncomeTax = document.getElementById("amount-income-tax");
+    const fieldNet = document.getElementById("amount-net");
 
     let pdfObjectUrl = null;
+    let lastEmployeeId = null;
+    let lastTaxYear = null;
 
     function showMessage(text, type) {
       message.textContent = text;
@@ -364,12 +395,12 @@
     }
 
     function recalcNetPay() {
-      const gross = parseAmount(document.getElementById("gross-pay").value);
-      const cpp = parseAmount(document.getElementById("cpp").value);
-      const ei = parseAmount(document.getElementById("ei").value);
-      const tax = parseAmount(document.getElementById("income-tax").value);
+      const gross = parseAmount(fieldGross.value);
+      const cpp = parseAmount(fieldCpp.value);
+      const ei = parseAmount(fieldEi.value);
+      const tax = parseAmount(fieldIncomeTax.value);
       const net = Math.max(0, gross - cpp - ei - tax);
-      document.getElementById("net-pay").value = net.toFixed(2);
+      fieldNet.value = net.toFixed(2);
     }
 
     function fillForm(sample) {
@@ -379,10 +410,10 @@
       document.getElementById("start-date").value = sample.payPeriod.startDate;
       document.getElementById("end-date").value = sample.payPeriod.endDate;
       document.getElementById("pay-date").value = sample.payPeriod.payDate;
-      document.getElementById("gross-pay").value = sample.earnings.grossPay;
-      document.getElementById("cpp").value = sample.deductions.cpp;
-      document.getElementById("ei").value = sample.deductions.ei;
-      document.getElementById("income-tax").value = sample.deductions.incomeTax;
+      fieldGross.value = sample.earnings.grossPay;
+      fieldCpp.value = sample.deductions.cpp;
+      fieldEi.value = sample.deductions.ei;
+      fieldIncomeTax.value = sample.deductions.incomeTax;
       recalcNetPay();
     }
 
@@ -398,14 +429,85 @@
           endDate: document.getElementById("end-date").value,
           payDate: document.getElementById("pay-date").value,
         },
-        earnings: { grossPay: document.getElementById("gross-pay").value.trim() },
+        earnings: { grossPay: fieldGross.value.trim() },
         deductions: {
-          cpp: document.getElementById("cpp").value.trim(),
-          ei: document.getElementById("ei").value.trim(),
-          incomeTax: document.getElementById("income-tax").value.trim(),
+          cpp: fieldCpp.value.trim(),
+          ei: fieldEi.value.trim(),
+          incomeTax: fieldIncomeTax.value.trim(),
         },
-        netPay: document.getElementById("net-pay").value.trim(),
+        netPay: fieldNet.value.trim(),
       };
+    }
+
+    function taxYearFromForm() {
+      const payDate = document.getElementById("pay-date").value;
+      return payDate ? Number.parseInt(payDate.slice(0, 4), 10) : new Date().getFullYear();
+    }
+
+    async function resolveEmployeeId() {
+      if (lastEmployeeId) {
+        return lastEmployeeId;
+      }
+
+      const sin = document.getElementById("employee-sin").value.trim();
+      const response = await fetch("/payroll/employees", {
+        headers: { apikey: apiKey },
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(typeof data.detail === "string" ? data.detail : "Could not look up employee.");
+      }
+
+      const match = data.find((employee) => employee.sin === sin);
+      if (!match) {
+        throw new Error("No employee found for this SIN. Generate at least one pay stub first.");
+      }
+
+      return match.id;
+    }
+
+    async function downloadAllPeriods() {
+      clearMessage();
+      downloadAllBtn.disabled = true;
+      downloadAllResultBtn.disabled = true;
+      downloadAllBtn.textContent = "Downloading…";
+
+      try {
+        const employeeId = await resolveEmployeeId();
+        const taxYear = lastTaxYear || taxYearFromForm();
+        const response = await fetch(
+          `/payroll/employees/${employeeId}/stubs?taxYear=${taxYear}`,
+          { headers: { apikey: apiKey } },
+        );
+
+        if (!response.ok) {
+          let detail = "Download failed.";
+          try {
+            const data = await response.json();
+            detail = data.detail || detail;
+          } catch (_) {
+            detail = await response.text();
+          }
+          showMessage(detail, "error");
+          return;
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `pay-stubs-${employeeId}-${taxYear}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showMessage(`Downloaded all pay periods for ${taxYear}.`, "success");
+      } catch (err) {
+        showMessage(err.message, "error");
+      } finally {
+        downloadAllBtn.disabled = false;
+        downloadAllResultBtn.disabled = false;
+        downloadAllBtn.textContent = "Download All Periods";
+      }
     }
 
     function setPdfLinks(base64Pdf) {
@@ -427,9 +529,16 @@
       clearMessage();
     });
 
-    ["gross-pay", "cpp", "ei", "income-tax"].forEach((id) => {
-      document.getElementById(id).addEventListener("input", recalcNetPay);
+    ["input", "change", "blur"].forEach((eventName) => {
+      form.addEventListener(eventName, (event) => {
+        if (event.target instanceof HTMLInputElement && event.target.hasAttribute("data-recalc-net")) {
+          recalcNetPay();
+        }
+      });
     });
+
+    downloadAllBtn.addEventListener("click", downloadAllPeriods);
+    downloadAllResultBtn.addEventListener("click", downloadAllPeriods);
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -460,6 +569,8 @@
         }
 
         const ytd = data.cumulative.totals;
+        lastEmployeeId = data.cumulative.employeeId;
+        lastTaxYear = data.cumulative.taxYear;
         showMessage("Pay stub generated successfully.", "success");
         ytdSummary.textContent =
           "YTD gross: $" + ytd.grossPay +

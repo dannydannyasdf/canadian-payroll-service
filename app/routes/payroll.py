@@ -1,14 +1,21 @@
 import base64
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.exceptions import DuplicatePayPeriodError
 from app.models.cumulative import PayStubResponse
+from app.models.employee import EmployeeSummary
 from app.models.payroll import PayrollPayload
 from app.services.billing_service import record_billing_event
-from app.services.pdf_generator import render_pay_stub_pdf
+from app.services.pdf_generator import render_pay_stub_archive_pdf, render_pay_stub_pdf
+from app.services.stub_archive_service import (
+    EmployeeNotFoundError,
+    StubArchiveNotFoundError,
+    build_stub_archive,
+    list_employees,
+)
 from app.services.xml_validator import validate_payroll_xml
 from app.services.ytd_service import accumulate_ytd
 
@@ -76,3 +83,37 @@ async def generate_pay_stub_xml(request: Request, db: Session = Depends(get_db))
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     return _pay_stub_response(payload, db, request)
+
+
+@router.get("/employees", response_model=list[EmployeeSummary])
+def get_employees(db: Session = Depends(get_db)) -> list[EmployeeSummary]:
+    """List employees (use the id to download a stub archive)."""
+    return [EmployeeSummary(**row) for row in list_employees(db)]
+
+
+@router.get("/employees/{employee_id}/stubs")
+def download_stub_archive(
+    employee_id: int,
+    tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    db: Session = Depends(get_db),
+) -> Response:
+    """
+    Download all pay stubs for an employee and tax year as one multi-page PDF.
+
+    Requires API key when accessed through Kong: `apikey: <your-key>`
+    """
+    try:
+        stubs = build_stub_archive(db, employee_id, tax_year)
+    except EmployeeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except StubArchiveNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    pdf_bytes = render_pay_stub_archive_pdf(stubs)
+    filename = f"pay-stubs-{employee_id}-{tax_year}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
