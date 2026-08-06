@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: payroll
+      POSTGRES_PASSWORD: payroll
+      POSTGRES_DB: payroll
+    volumes:
+      - payroll_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payroll -d payroll"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://payroll:payroll@db:5432/payroll
+      PAYROLL_CLIENT_LOGO_PATH: /app/Images/Anonymous_Logo.jpg
+      PAYROLL_PROVIDER_LOGO_PATH: /app/Images/Gamma_heads_Logo_Black.jpg
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  payroll_pg_data:
