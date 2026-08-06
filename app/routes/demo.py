@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, Request
@@ -8,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 router = APIRouter()
 TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
 SAMPLES_DIR = Path(__file__).resolve().parents[2] / "samples"
+DEMO_API_KEY = os.environ.get("DEMO_API_KEY", "gamma-dev-api-key")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 
@@ -28,5 +30,6 @@ def demo_page(request: Request) -> HTMLResponse:
         {
             "week1_json": json.dumps(_load_sample("sample_payroll.json")),
             "week2_json": json.dumps(_load_sample("sample_payroll_week2.json")),
+            "demo_api_key": DEMO_API_KEY,
         },
     )

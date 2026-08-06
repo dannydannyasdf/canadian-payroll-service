@@ -1,0 +1,54 @@
+_format_version: "3.0"
+
+services:
+  - name: payroll-app
+    url: http://app:8000
+    routes:
+      # Payroll API — requires API key + rate limit
+      - name: payroll-api
+        paths:
+          - /payroll
+        strip_path: false
+        plugins:
+          - name: key-auth
+            config:
+              key_names:
+                - apikey
+              hide_credentials: true
+          - name: rate-limiting
+            config:
+              minute: 30
+              hour: 500
+              policy: local
+              fault_tolerant: true
+
+      # Demo, docs, health — public (rate-limited only)
+      - name: public-routes
+        paths:
+          - /demo
+          - /health
+          - /images
+          - /docs
+          - /openapi.json
+          - /redoc
+        strip_path: false
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 120
+              policy: local
+              fault_tolerant: true
+
+      - name: root
+        paths:
+          - /
+        strip_path: false
+
+consumers:
+  - username: gamma-demo
+    keyauth_credentials:
+      - key: gamma-dev-api-key
+
+  - username: gamma-client
+    keyauth_credentials:
+      - key: gamma-client-api-key

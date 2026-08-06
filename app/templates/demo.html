@@ -128,6 +128,17 @@
       outline-offset: 1px;
     }
 
+    input[readonly] {
+      background: var(--bg);
+      color: var(--muted);
+    }
+
+    .field-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: -8px 0 12px;
+    }
+
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -299,8 +310,9 @@
         <label for="income-tax">Income tax (Box 22)</label>
         <input id="income-tax" name="incomeTax" inputmode="decimal" required>
 
-        <label for="net-pay">Net pay</label>
-        <input id="net-pay" name="netPay" inputmode="decimal" required>
+        <label for="net-pay">Net pay (calculated)</label>
+        <p class="field-hint">Gross pay minus CPP, EI, and income tax.</p>
+        <input id="net-pay" name="netPay" inputmode="decimal" readonly required>
       </div>
 
       <button type="submit" id="submit-btn">Generate PDF</button>
@@ -318,6 +330,7 @@
   </div>
 
   <script>
+    const apiKey = {{ demo_api_key | tojson }};
     const samples = {
       week1: {{ week1_json | safe }},
       week2: {{ week2_json | safe }},
@@ -345,6 +358,20 @@
       message.className = "message";
     }
 
+    function parseAmount(value) {
+      const amount = Number.parseFloat(value);
+      return Number.isFinite(amount) ? amount : 0;
+    }
+
+    function recalcNetPay() {
+      const gross = parseAmount(document.getElementById("gross-pay").value);
+      const cpp = parseAmount(document.getElementById("cpp").value);
+      const ei = parseAmount(document.getElementById("ei").value);
+      const tax = parseAmount(document.getElementById("income-tax").value);
+      const net = Math.max(0, gross - cpp - ei - tax);
+      document.getElementById("net-pay").value = net.toFixed(2);
+    }
+
     function fillForm(sample) {
       document.getElementById("employer-name").value = sample.employer.name;
       document.getElementById("employee-name").value = sample.employee.name;
@@ -356,7 +383,7 @@
       document.getElementById("cpp").value = sample.deductions.cpp;
       document.getElementById("ei").value = sample.deductions.ei;
       document.getElementById("income-tax").value = sample.deductions.incomeTax;
-      document.getElementById("net-pay").value = sample.netPay;
+      recalcNetPay();
     }
 
     function buildPayload() {
@@ -400,25 +427,34 @@
       clearMessage();
     });
 
+    ["gross-pay", "cpp", "ei", "income-tax"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", recalcNetPay);
+    });
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       clearMessage();
+      recalcNetPay();
       submitBtn.disabled = true;
       submitBtn.textContent = "Generating…";
 
       try {
         const response = await fetch("/payroll/pay-stub", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": apiKey,
+          },
           body: JSON.stringify(buildPayload()),
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-          const detail = typeof data.detail === "string"
-            ? data.detail
-            : JSON.stringify(data.detail);
+          let detail = data.detail;
+          if (Array.isArray(detail)) {
+            detail = detail.map((item) => item.msg || JSON.stringify(item)).join("; ");
+          }
           showMessage(detail || "Request failed.", "error");
           return;
         }

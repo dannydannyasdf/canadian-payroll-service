@@ -84,3 +84,19 @@ class YtdRecord(Base):
     )
 
     employee: Mapped["EmployeeRecord"] = relationship(back_populates="ytd_records")
+
+
+class BillingEvent(Base):
+    """Usage log for pay-per-use billing (% of gross pay)."""
+
+    __tablename__ = "billing_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    consumer_username: Mapped[str] = mapped_column(String(128), nullable=False)
+    gross_pay: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    billing_fee: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )

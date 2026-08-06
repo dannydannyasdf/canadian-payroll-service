@@ -2,7 +2,7 @@ import re
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 SIN_PATTERN = re.compile(r"^\d{3}-\d{3}-\d{3}$")
 
@@ -65,6 +65,21 @@ class PayrollPayload(BaseModel):
         if value < 0:
             raise ValueError("netPay must be zero or greater")
         return value
+
+    @model_validator(mode="after")
+    def validate_net_matches_deductions(self) -> "PayrollPayload":
+        expected_net = (
+            self.earnings.gross_pay
+            - self.deductions.cpp
+            - self.deductions.ei
+            - self.deductions.income_tax
+        )
+        if self.net_pay != expected_net:
+            raise ValueError(
+                f"netPay must equal grossPay minus CPP, EI, and incomeTax "
+                f"(expected {expected_net}, got {self.net_pay})"
+            )
+        return self
 
     def to_render_dict(self) -> dict:
         """Flat dict for the Jinja2 pay stub template."""
