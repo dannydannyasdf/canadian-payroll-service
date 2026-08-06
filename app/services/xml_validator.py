@@ -4,14 +4,15 @@ from pathlib import Path
 import xmlschema
 from lxml import etree
 
+from app.models.payroll import Deductions, Earnings, Employee, Employer, PayPeriod, PayrollPayload
+
 XSD_PATH = Path(__file__).resolve().parents[2] / "schemas" / "payroll.xsd"
 PAYROLL_NS = "https://payroll.example.ca/schema/v1"
 
 
-def validate_payroll_xml(xml_text: str) -> dict:
+def validate_payroll_xml(xml_text: str) -> PayrollPayload:
     """
-    Validate incoming XML against payroll.xsd and return a plain dict
-    the PDF renderer can consume.
+    Validate incoming XML against payroll.xsd and return a PayrollPayload.
     """
     schema = xmlschema.XMLSchema(str(XSD_PATH))
 
@@ -32,16 +33,22 @@ def validate_payroll_xml(xml_text: str) -> dict:
     def money(xpath: str) -> Decimal:
         return Decimal(text(xpath))
 
-    return {
-        "employer_name": text("p:employer/p:name"),
-        "employee_name": text("p:employee/p:name"),
-        "employee_sin": text("p:employee/p:sin"),
-        "period_start": text("p:payPeriod/p:startDate"),
-        "period_end": text("p:payPeriod/p:endDate"),
-        "pay_date": text("p:payPeriod/p:payDate"),
-        "gross_pay": money("p:earnings/p:grossPay"),
-        "cpp": money("p:deductions/p:cpp"),
-        "ei": money("p:deductions/p:ei"),
-        "income_tax": money("p:deductions/p:incomeTax"),
-        "net_pay": money("p:netPay"),
-    }
+    return PayrollPayload(
+        employer=Employer(name=text("p:employer/p:name")),
+        employee=Employee(
+            name=text("p:employee/p:name"),
+            sin=text("p:employee/p:sin"),
+        ),
+        payPeriod=PayPeriod(
+            startDate=text("p:payPeriod/p:startDate"),
+            endDate=text("p:payPeriod/p:endDate"),
+            payDate=text("p:payPeriod/p:payDate"),
+        ),
+        earnings=Earnings(grossPay=money("p:earnings/p:grossPay")),
+        deductions=Deductions(
+            cpp=money("p:deductions/p:cpp"),
+            ei=money("p:deductions/p:ei"),
+            incomeTax=money("p:deductions/p:incomeTax"),
+        ),
+        netPay=money("p:netPay"),
+    )

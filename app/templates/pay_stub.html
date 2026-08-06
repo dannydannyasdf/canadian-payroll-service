@@ -22,11 +22,31 @@
       top: -34mm;
       left: 0;
       right: 0;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
+      width: 100%;
       border-bottom: 1px solid #ccc;
       padding-bottom: 3mm;
+    }
+
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .header-table td {
+      border: none;
+      padding: 0;
+      vertical-align: top;
+    }
+
+    .header-left {
+      width: 50%;
+      text-align: left;
+    }
+
+    .header-right {
+      width: 50%;
+      text-align: right;
     }
 
     .client-logo {
@@ -35,16 +55,30 @@
     }
 
     .provider-brand {
-      display: flex;
-      align-items: flex-start;
-      gap: 3mm;
-      text-align: right;
+      display: inline-table;
+      border-collapse: collapse;
+      text-align: left;
     }
 
+    .provider-logo-wrap,
+    .provider-details {
+      display: table-cell;
+      vertical-align: middle;
+    }
+
+    .provider-logo-wrap {
+      padding-right: 3mm;
+      width: 1%;
+      white-space: nowrap;
+    }
+
+    /* Match logo height to provider-details: name line + gap + 3 address lines */
     .provider-logo {
-      max-height: 12mm;
-      max-width: 12mm;
-      margin-top: 1mm;
+      height: calc(1mm + 11pt * 1.35 + 8pt * 1.35 * 3);
+      max-height: calc(1mm + 11pt * 1.35 + 8pt * 1.35 * 3);
+      width: auto;
+      object-fit: contain;
+      display: block;
     }
 
     .provider-details {
@@ -75,22 +109,23 @@
       margin-top: 8mm;
     }
 
-    table {
+    table.pay-table {
       width: 100%;
       border-collapse: collapse;
     }
 
-    th, td {
+    table.pay-table th,
+    table.pay-table td {
       border: 1px solid #ccc;
       padding: 3mm 4mm;
       text-align: left;
     }
 
-    th {
+    table.pay-table th {
       background: #f3f3f3;
     }
 
-    td.amount {
+    table.pay-table td.amount {
       text-align: right;
       width: 35mm;
     }
@@ -104,23 +139,31 @@
 </head>
 <body>
   <div class="page-header">
-    <div class="client-brand">
-      {% if client_logo_url %}
-      <img class="client-logo" src="{{ client_logo_url }}" alt="Client logo">
-      {% endif %}
-    </div>
-    <div class="provider-brand">
-      {% if provider_logo_url %}
-      <img class="provider-logo" src="{{ provider_logo_url }}" alt="Gamma Personnel logo">
-      {% endif %}
-      <div class="provider-details">
-        <span class="provider-name">{{ provider_name }}</span>
-        <span class="provider-contact">{{ provider_contact_name }}</span>
-        {% for line in provider_address_lines %}
-        <span class="provider-address">{{ line }}</span>
-        {% endfor %}
-      </div>
-    </div>
+    <table class="header-table">
+      <tr>
+        <td class="header-left">
+          {% if client_logo_url %}
+          <img class="client-logo" src="{{ client_logo_url }}" alt="Client logo">
+          {% endif %}
+        </td>
+        <td class="header-right">
+          <div class="provider-brand">
+            {% if provider_logo_url %}
+            <div class="provider-logo-wrap">
+              <img class="provider-logo" src="{{ provider_logo_url }}" alt="Gamma Personnel logo">
+            </div>
+            {% endif %}
+            <div class="provider-details">
+              <span class="provider-name">{{ provider_name }}</span>
+              <span class="provider-contact">{{ provider_contact_name }}</span>
+              {% for line in provider_address_lines %}
+              <span class="provider-address">{{ line }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
   </div>
 
   <h1>Pay Stub</h1>
@@ -133,7 +176,7 @@
   </div>
 
   <div class="section">
-    <table>
+    <table class="pay-table">
       <thead>
         <tr>
           <th>Description</th>
