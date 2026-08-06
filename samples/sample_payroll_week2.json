@@ -1,0 +1,23 @@
+{
+  "employer": {
+    "name": "Acme Personnel Inc."
+  },
+  "employee": {
+    "name": "Jane Freelancer",
+    "sin": "123-456-789"
+  },
+  "payPeriod": {
+    "startDate": "2026-01-08",
+    "endDate": "2026-01-14",
+    "payDate": "2026-01-17"
+  },
+  "earnings": {
+    "grossPay": "5000.00"
+  },
+  "deductions": {
+    "cpp": "288.00",
+    "ei": "82.00",
+    "incomeTax": "1100.00"
+  },
+  "netPay": "3530.00"
+}

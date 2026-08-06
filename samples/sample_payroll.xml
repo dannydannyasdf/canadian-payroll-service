@@ -9,8 +9,8 @@
   </employee>
   <payPeriod>
     <startDate>2026-01-01</startDate>
-    <endDate>2026-01-15</endDate>
-    <payDate>2026-01-20</payDate>
+    <endDate>2026-01-07</endDate>
+    <payDate>2026-01-10</payDate>
   </payPeriod>
   <earnings>
     <grossPay>5000.00</grossPay>
