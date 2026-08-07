@@ -50,3 +50,17 @@ schemas/cra/**
 !schemas/cra/complex.xsd
 !schemas/cra/standarddatatypes.xsd
 !schemas/cra/cracommonstructures.xsd
+
+# RQ XSD package — keep Relevé 1 filing subset only; rest stays on disk for validation
+# Original (R) only for now; Amended (A) and Cancel (D) deferred
+schemas/rq/**
+!schemas/rq/Transmission.xsd
+!schemas/rq/P.xsd
+!schemas/rq/Groupes.xsd
+!schemas/rq/R01.xsd
+!schemas/rq/T01.xsd
+!schemas/rq/Simple.xsd
+!schemas/rq/Complexe.xsd
+!schemas/rq/SimpleEvolutif.xsd
+!schemas/rq/releve1_efile_preview.xsd
+!schemas/rq/read-me.txt
