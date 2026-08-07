@@ -32,13 +32,20 @@
 | 5 | Multi-period pay stub archive PDF |
 | 6 prep | Alembic migrations; T4/Relevé 1 box mapping; JSON preview endpoints |
 | 6.1 | T4 PDF (official CRA form overlay when available) |
-| 6.2 | Relevé 1 PDF |
+| 6.2 | Relevé 1 PDF (official RQ form overlay when available) |
 | 6.3 | CRA T4 e-file XML (official XSD when present, else preview schema) |
 | 6.4 | Revenu Québec Relevé 1 e-file XML (official `Transmission.xsd` when present, else preview schema; QC employment province only) |
 
 **Onboarding (implemented, separate from Phase 6 numbering):**
 - Slices 1–2: Employer/employee registration API
 - Slice 3: Optional `employer.id` / `employee.id` on pay stub; inactive → 403; demo dropdowns
+
+**Future work (Phase 7+):**
+- Amended / cancel e-file report types (CRA `A`/`C`, RQ `A`/`D`) — currently Original only
+- Richer tax box mappings (federal vs Québec income tax split, QPP/QPIP caps, pensionable/insurable ceilings)
+- Automated tests for official CRA/RQ XML validation and PDF overlay output
+- Demo seed data: set sample employee Jane's `employmentProvince` to `QC` so RQ XML works from `/demo`
+- Replace placeholder RQ dossier / employer IDs with production values when GP receives them
 
 ---
 
@@ -50,7 +57,10 @@
 
 **PDF generation:**
 - **WeasyPrint** + **Jinja2** templates for pay stubs, HTML-fallback T4/Relevé 1, and pay-stub archives.
-- **PyMuPDF** (`pymupdf`) for official CRA **t4-25e.pdf** overlay (`app/services/t4_official_form.py`). Asset at `app/assets/forms/t4-25e.pdf`.
+- **PyMuPDF** (`pymupdf`) for official form overlays:
+  - CRA **t4-25e.pdf** → `app/services/t4_official_form.py` (asset: `app/assets/forms/t4-25e.pdf`)
+  - Revenu Québec **releve1-2026-10.pdf** → `app/services/releve1_official_form.py` (asset: `app/assets/forms/releve1-2026-10.pdf`)
+- When an official form asset is missing, T4/Relevé 1 PDFs fall back to WeasyPrint HTML templates.
 - WeasyPrint fixed headers use **table layout** (not flex/absolute) for reliable multi-page rendering.
 
 **XML:** **lxml** + **xmlschema** for ingress validation (`schemas/payroll.xsd`) and e-file egress validation.
@@ -88,23 +98,25 @@ canadian-payroll-service/
 │   │   ├── provider_config.py  # ★ GP proxy settings — single source for filing identity
 │   │   ├── ytd_service.py      # Pay period + YTD accumulation
 │   │   ├── pdf_generator.py    # WeasyPrint renderers
-│   │   ├── t4_official_form.py # PyMuPDF CRA form overlay
-│   │   ├── tax_slip_service.py # T4/Relevé 1 preview from YTD
-│   │   ├── cra_efile_service.py
-│   │   ├── rq_efile_service.py # Relevé 1 e-file (Slice 4)
+│   │   ├── t4_official_form.py     # PyMuPDF CRA T4 form overlay
+│   │   ├── releve1_official_form.py # PyMuPDF Relevé 1 form overlay
+│   │   ├── tax_slip_service.py     # T4/Relevé 1 preview from YTD
+│   │   ├── cra_efile_service.py    # CRA T4 e-file (official + preview)
+│   │   ├── rq_efile_service.py     # Relevé 1 e-file (official + preview)
 │   │   ├── onboarding_service.py
 │   │   ├── stub_archive_service.py
 │   │   ├── billing_service.py
 │   │   └── xml_validator.py
 │   ├── tax/box_mapping.py      # YTD → T4 boxes & Relevé 1 boxes
 │   ├── templates/              # Jinja2 HTML for PDFs + demo.html
-│   └── assets/forms/           # t4-25e.pdf
+│   └── assets/forms/           # t4-25e.pdf, releve1-2026-10.pdf (gitignored; copy locally)
 ├── alembic/versions/           # 001 baseline, 002 tax metadata, 003 onboarding status
 ├── schemas/
 │   ├── payroll.xsd             # Ingress contract
 │   ├── cra/                    # Official CRA XSD subset + t4_efile_preview.xsd
 │   └── rq/                     # Official RQ XSD package + releve1_efile_preview.xsd fallback
-├── samples/                    # sample_payroll.json/xml, tax slip expected outputs
+├── samples/                    # sample_payroll.json/xml, tax slip + e-file expected outputs
+│                               # incl. sample_rq_releve1_efile_jane_2026_official.xml
 ├── kong/kong.yml
 ├── nginx/nginx.conf
 ├── docker-compose.yml
@@ -119,11 +131,11 @@ canadian-payroll-service/
 | `POST /payroll/pay-stub` | JSON payroll → YTD + PDF (primary) |
 | `POST /payroll/pay-stub/xml` | XML payroll → same response shape |
 | `GET /payroll/employees/{id}/stubs?taxYear=` | All pay periods → one PDF |
-| `GET /payroll/employees/{id}/t4[|/pdf|/xml]?taxYear=` | T4 JSON / PDF / CRA XML |
-| `GET /payroll/employees/{id}/releve1[|/pdf|/xml]?taxYear=` | Relevé 1 JSON / PDF / RQ XML |
-| `GET /payroll/tax-filing/cra?taxYear=` | Bulk CRA T4 e-file |
+| `GET /payroll/employees/{id}/t4[|/pdf|/xml]?taxYear=[&official=]` | T4 JSON / PDF / CRA XML (`official` defaults to true when CRA XSD present) |
+| `GET /payroll/employees/{id}/releve1[|/pdf|/xml]?taxYear=[&official=]` | Relevé 1 JSON / PDF / RQ XML (`official` defaults to true when RQ XSD present) |
+| `GET /payroll/tax-filing/cra?taxYear=[&official=]` | Bulk CRA T4 e-file |
 | `GET /payroll/tax-filing/cra/schema-status` | CRA XSD inventory |
-| `GET /payroll/tax-filing/rq?taxYear=` | Bulk Relevé 1 e-file (QC employees only) |
+| `GET /payroll/tax-filing/rq?taxYear=[&official=]` | Bulk Relevé 1 e-file (QC employees only) |
 | `GET /payroll/tax-filing/rq/schema-status` | RQ XSD inventory |
 | `POST/GET/PATCH /payroll/employers[/{id}]` | Client employer onboarding |
 | `POST/GET/PATCH /payroll/employers/{id}/employees[/{employee_id}]` | Employee onboarding |
@@ -151,7 +163,7 @@ canadian-payroll-service/
 - **Duplicate pay periods:** Same employee + period start + period end → **409 Conflict**, no YTD change.
 - **Employment province** (T4 box 10, RQ eligibility): `employee.employmentProvince` → `employee.address.province` → `PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE` (**ON**). Do **not** use GP's Montréal QC address as the employment province default.
 - **QC employees:** T4 uses box **17** (QPP) instead of box **16** (CPP). Relevé 1 e-file applies only to **QC** employment province.
-- **E-file report type:** Original (`O`) only for now; Amended (`A`) / Cancel (`C`) are future work.
+- **E-file report type:** Original only for now — CRA `O`, RQ `R` / `TypeEnvoi=1`. Amended (CRA `A`, RQ `A`) and cancel (CRA `C`, RQ `D`) are future work.
 - **Accountant disclaimer:** Box mappings are intentionally simplified previews — do not present as filing-ready without professional review.
 
 ### Proxy payroll / provider config
@@ -160,6 +172,16 @@ canadian-payroll-service/
 - **`filing_employer_display_name(client)`** → `{client}@{PROVIDER_NAME}`.
 - **`build_filing_employer_summary(client_name)`** → GP BN, payroll account, Montréal address for tax slips.
 - Client employer DB columns (`business_number`, etc.) are **not** used for T4/Relevé 1/CRA XML employer blocks.
+
+### Revenu Québec e-file specifics
+
+- **Official namespace:** `http://www.mrq.gouv.qc.ca/T5` with `VersionSchema="2025.1"` on `<Transmission>`.
+- **Structure:** `<Transmission>` → `<P>` (preparer block) + `<Groupe01>` → `<R>` slips + `<T>` employer summary.
+- **Amounts:** Comma decimal format in official XML (e.g. `10000,00`).
+- **Partner registration vs preparer number:** These are different identifiers:
+  - `PAYROLL_RQ_PARTNER_REGISTRATION=I1000625` — Gamma Personnel partner registration (business reference).
+  - `PAYROLL_RQ_PREPARATEUR_NO=NP100625` — **Numéro du préparateur** for the `<Preparateur><No>` element in official XML (must match `NP######` / `np######` pattern).
+- **Validation root:** `schemas/rq/Transmission.xsd` (falls back to `releve1_efile_preview.xsd` when official package absent).
 
 ### Environment variables (defaults)
 
@@ -171,10 +193,10 @@ PAYROLL_CRA_PAYROLL_ACCOUNT=10668 8385 RP0001   # spaced on PDF; stripped for XM
 PAYROLL_CRA_TRANSMITTER_BN9 → derived from payroll account (106688385)
 PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE=ON
 PAYROLL_RQ_EMPLOYER_ID=1234567890              # GP's Revenu Québec dossier ID
-PAYROLL_RQ_PARTNER_REGISTRATION=I1000625       # Gamma Personnel partner registration
+PAYROLL_RQ_PARTNER_REGISTRATION=I1000625       # Gamma Personnel partner registration (not the preparer No)
 PAYROLL_RQ_NEQ=1142427765                      # Gamma Personnel NEQ (shown on RL-1 PDF)
-PAYROLL_RQ_PARTNER_ID=0000000000000271         # Gamma Personnel partner identifier
-PAYROLL_RQ_PREPARATEUR_NO=NP100625              # Preparer number (NP######) for P block
+PAYROLL_RQ_PARTNER_ID=0000000000000271         # Gamma Personnel partner identifier (IdPartenaireReleves)
+PAYROLL_RQ_PREPARATEUR_NO=NP100625             # Numéro du préparateur — official XML <Preparateur><No>
 PAYROLL_RQ_CERTIFICATION_NO=RQ-26-01-010       # Software certification number
 PAYROLL_RQ_DOSSIER_NO=0271                     # 4-digit dossier number on T summary
 PAYROLL_CLIENT_LOGO_PATH / PAYROLL_PROVIDER_LOGO_PATH
@@ -205,7 +227,10 @@ DATABASE_URL=postgresql+psycopg://payroll:payroll@db:5432/payroll
 - **Public access:** `http://localhost:8080` (NGINX); app is not exposed directly except optional `app-direct` dev profile on :8000.
 - **Minimize diff scope** — match existing patterns (service layer, Pydantic models, Jinja templates).
 - **Do not commit** unless explicitly asked.
-- **`.cursorignore`** excludes bulk CRA XSD noise; keep T4 filing subset indexed. Official CRA schema source URL belongs in module docstrings only, not API responses.
+- **`.cursorignore`** excludes bulk CRA and RQ XSD noise; keep filing subsets indexed:
+  - **CRA:** `T619_T4.xsd`, `t4.xsd`, `t4_efile_preview.xsd`, `simple.xsd`, `complex.xsd`, `standarddatatypes.xsd`, `cracommonstructures.xsd`
+  - **RQ:** `Transmission.xsd`, `P.xsd`, `Groupes.xsd`, `R01.xsd`, `T01.xsd`, `Simple.xsd`, `Complexe.xsd`, `SimpleEvolutif.xsd`, `releve1_efile_preview.xsd`, `read-me.txt`
+- Official schema source URLs belong in module docstrings only, not API responses.
 
 ### What NOT to build or revert to
 
