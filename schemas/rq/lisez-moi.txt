@@ -1,0 +1,456 @@
+---------------------------------------------------------
+Schéma XML pour la transmission de relevés en format XML.
+---------------------------------------------------------
+
+Revenu QUEBEC, 28 octobre 2025.
+
+Ce document fournit des renseignements techniques sur l'utilisation du schéma XML pour la 
+transmission des relevés en format XML.
+
+
+1. TERMINOLOGIE
+
+	Les termes schéma et schéma XML désignent le langage qui définit les structures et les 
+	contraintes de contenu de documents XML décrites dans la spécification « W3C XML Schema 
+	Part 1 », disponible à l'adresse http://www.w3.org/TR/xmlschema-1/. Ce langage est utilisé 
+	pour construire et contrôler la validité des documents XML. 
+
+	Le terme document XML désigne un document texte conforme à la spécification « W3C XML 1.0 », 
+	disponible à l'adresse http://www.w3.org/TR/REC-xml/. Un document XML est valide quand sa structure
+	est conforme au schéma XML qui lui est associé.
+
+
+2. STRUCTURE DES FICHIERS
+
+	Le schéma XML pour la transmission des relevés en format XML est constitué de plusieurs 
+	fichiers portant l'extension .xsd. Ce découpage en plusieurs fichiers permet de retrouver plus 
+	facilement l'information recherchée. 
+
+	Pour valider un document XML, vous devez utiliser le fichier principal du schéma, nommé 
+	Transmission.xsd, qui inclut par référence tous les autres fichiers.
+
+
+3. ESPACE DE NOMS
+
+	L'utilisation d'un espace de noms (« namespace ») permet d'uniformiser la nomenclature des 
+	éléments et des attributs propres à un domaine d'application, et vise à prévenir les conflits 
+	de noms dans les documents XML.
+
+	L'espace de noms est spécifié dans l'attribut « targetNamespace » de l'élément racine du schéma. 
+	L'espace de noms du schéma pour la transmission des relevés est le suivant : 
+	http://www.mrq.gouv.qc.ca/T5. Ce nom a le format d'une adresse Internet qui conduit à de 
+	l'information sur le schéma (cette adresse n'est pas disponible présentement). 
+	
+
+4. VERSION
+
+	L'attribut Version indique la version d'un schéma. Par exemple :
+	
+		<xsd:schema targetNamespace="http://www.mrq.gouv.qc.ca/T5" version="2025.1" ...>
+
+	Les schémas peuvent évoluer et Revenu QUEBEC peut décider de ne plus supporter des versions désuètes.  
+	Vous devez donc surveiller les annonces de mises à jour des schémas et, s'il y a lieu, télécharger la 
+	dernière version du schéma. Les modifications aux schémas sont indiquées dans le fichier
+	/fr/Modifications.txt.
+
+	IMPORTANT: Un document de transmission de relevés doit indiquer, dans l'attribut VersionSchema 
+	de l'élément Transmission, la version de schéma que vous avez utilisée pour construire le 
+	document. Cette information permet aux applications de valider le document avec la version du schéma
+	que vous avez utilisée. Par exemple :
+
+		<Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5">
+    
+
+5. SCHÉMA ET ESPACE DE NOMS
+	
+	Le fichier de transmission contient une référence à l'espace de noms à travers l'attribut 
+	« xmlns ». Cet attribut fait le lien entre les définitions du 
+	schéma et les balises utilisées dans la transmission.
+	
+	Certains analyseurs demandent l'utilisation d'un lien direct entre l'espace de noms et le schéma.  
+	Ils requièrent un attribut défini dans l'espace de noms des schémas XML : « schemaLocation ». 
+	Cet attribut prend deux paramètres, le premier est l'espace de noms pour les transmissions et le 
+	second l'URI pour trouver le fichier du schéma. Comme il s'agit d'un attribut d'un autre schéma, 
+	il faut définir l'espace de noms de ce schéma avec le même attribut que précédemment « xmlns ». 
+	Par exemple :
+	
+	        <Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5"
+	                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                              xsi:schemaLocation="http://www.mrq.gouv.qc.ca/T5 Transmission.xsd">
+
+	Pour que l'exemple fonctionne, le fichier de transmission doit se trouver dans le même dossier 
+	que le schéma.
+
+
+6. ANALYSEUR DE VALIDATION
+
+	Un analyseur de validation est un logiciel qui permet de valider un document XML en fonction 
+	d'un schéma. Revenu QUEBEC ne fournit pas ce logiciel. Voici toutefois quelques analyseurs 
+	disponibles sur le marché :
+
+	Éditeurs XML qui fournissent un analyseur de validation :
+		XML Spy   (http://www.altova.com/products_ide.html)
+		XMLWriter (http://www.xmlwriter.net/)
+		Stylus    (http://www.stylusstudio.com/)
+		XRay      (http://architag.com/xray/)
+		XMLMind   (http://www.xmlmind.com/xmleditor/)
+		Cooktop   (http://www.xmlcooktop.com/)
+
+	Librairies qui incluent un analyseur de validation XML :
+		MSXML     (http://www.microsoft.com/downloads/details.aspx?familyid=3144b72b-b4f2-46da-b4b6-c5d7485f2b42)
+		.NET      (http://www.microsoft.com/downloads/details.aspx?familyid=9B3A2CA6-3647-4070-9F41-A333C6B9181D)
+		JAXP      (http://java.sun.com/xml/jaxp/index.jsp)
+		XERCES-J  (http://xml.apache.org/xerces-j/)
+		ORACLE    (http://www.oracle.com/technology/tech/xml/index.html)
+
+
+7. ENCODAGE ET CARACTÈRES SPÉCIAUX
+
+	Le fichier en format XML doit obligatoirement indiquer son encodage. Vous devez déclarer cet 
+	encodage dans l'en-tête du fichier comme dans cet exemple : <?xml version="1.0" encoding="ISO-8859-1"?>. 
+	Il existe plusieurs formes d'encodage qui correspondent en gros à l'environnement que 
+	vous utilisez. On compte parmi les plus fréquents les encodages ISO-8859-1 et UTF-8. Il est primordial 
+	que la balise de déclaration de l'encodage reflète bien celui utilisé dans votre fichier. (extrait du 
+	IN-800 à la section 5.2.2).
+
+	Remplacez les caractères spéciaux (<, >, ', " et &) par leur entité XML correspondante (&lt;, &gt;, &apos;, 
+	&quot; et &amp;) dans le contenu des champs alphanumériques. Vous pouvez inclure tels quels les 
+	caractères " et ' dans le contenu d'un champ. Notez qu'il n'existe que ces 5 entités en XML contrairement 
+	au HTML qui en compte une multitude. Il n'est pas nécessaire de remplacer d'autres caractères par une 
+	entité hexadécimale car le caractère peut être utilisé directement.
+	
+	Exemples corrects:
+		<Ligne1>3800, rue Cité de l'Ampoule</Ligne1>
+		<Ligne1>3800, rue Cité de l&apos;Ampoule</Ligne1>
+
+		L'accent n'est pas remplacé car l'encodage permet de le représenter.
+		
+
+8. EXEMPLE DE DOCUMENT XML
+
+	L'exemple suivant illustre une transmission de relevés 1 originaux conforme à la version 2025.1 du schéma.
+
+	<?xml version="1.0" encoding="ISO-8859-1"?>
+	<Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5">
+		<P>
+			<Annee>2025</Annee>
+			<TypeEnvoi>1</TypeEnvoi>
+			<Preparateur>
+				<No>NP001151</No>
+				<Type>1</Type>
+				<Nom1>AGENCE</Nom1>
+				<Nom2>REVENU</Nom2>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ligne2>QUEBEC</Ligne2>
+					<Ville>QUEBEC</Ville>
+					<Province>QUEBEC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+			</Preparateur>
+			<Informatique>
+				<Nom>INFORMATICIEN</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Informatique>
+			<Comptabilite>
+				<Nom>COMPTABLE</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Comptabilite>
+			<NoCertification>RQ-25-01-010</NoCertification>
+			<NomLogiciel>LOGICIEL</NomLogiciel>
+			<VersionLogiciel>2025-01</VersionLogiciel>
+			<CourrielResponsable>COURRIEL@SERVEUR.COM</CourrielResponsable>
+			<IdPartenaireReleves>0000000000001234</IdPartenaireReleves>
+			<IdProduitReleves>0000000000001234</IdProduitReleves>
+		</P>
+		<Groupe01>
+			<R>
+				<Annee>2025</Annee>
+				<NoReleve>526220015</NoReleve>
+				<Identification>
+					<Employe>
+						<NAS>999999998</NAS>
+						<No>AWEN17097901</No>
+						<NomFamille>REVENU</NomFamille>
+						<Prenom>MARLY</Prenom>
+					</Employe>
+				</Identification>
+				<Adresse>
+					<Ligne1>13 RUE CUL-DE-SAC</Ligne1>
+					<Ville>SHERBROOKE</Ville>
+					<Province>QC</Province>
+					<CodePostal>G2G6Y4</CodePostal>
+				</Adresse>
+				<Montants>
+					<A_RevenuEmploi>12000,00</A_RevenuEmploi>
+					<B_CotisationRRQ>250,00</B_CotisationRRQ>
+					<O_AutreRevenu>
+						<MontantCaseO>3000,00</MontantCaseO>
+						<SourceCaseO>RB</SourceCaseO>
+					</O_AutreRevenu>
+				</Montants>
+				<CaseRensCompl>
+					<CodeRensCompl>A-1</CodeRensCompl>
+					<DonneeRensCompl>100,00</DonneeRensCompl>
+				</CaseRensCompl>
+				<CaseRensCompl>
+					<CodeRensCompl>A-2</CodeRensCompl>
+					<DonneeRensCompl>200,00</DonneeRensCompl>
+				</CaseRensCompl>
+			</R>
+			<R>
+				<Annee>2025</Annee>
+				<NoReleve>679200012</NoReleve>
+				<Identification>
+					<RaisonSociale>
+						<AutreNoId>1234567897</AutreNoId>
+						<Nom1>REVENU</Nom1>
+						<Nom2>MARLY</Nom2>
+					</RaisonSociale>
+				</Identification>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ville>QUEBEC</Ville>
+					<Province>QC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+				<Montants>
+					<H_CotisationRQAP>7000,00</H_CotisationRQAP>
+					<I_SalaireAdmisRQAP>0,00</I_SalaireAdmisRQAP>
+				</Montants>
+			</R>
+			<T>
+				<Annee>2025</Annee>
+				<NbReleves>2</NbReleves>
+				<Employeur>
+					<NoId>1006149487</NoId>
+					<TypeDossier>RS</TypeDossier>
+					<NoDossier>0002</NoDossier>
+					<Nom1>MEQ - DIRECTION</Nom1>
+					<Nom2>AIDE FINANCIERE AUX ETUDIANTS</Nom2>
+					<Adresse>
+						<Ligne1>1035, RUE DE LA CHEVROTIERE</Ligne1>
+						<Ligne2>EDIFICE MARIE-GUYART</Ligne2>
+						<Ville>LAVAL</Ville>
+						<Province>QUEBEC</Province>
+						<CodePostal>G1R5A5</CodePostal>
+					</Adresse>
+				</Employeur>
+			</T>
+		</Groupe01>
+	</Transmission>
+
+	L'exemple suivant illustre une transmission de relevés 1 modifiés conforme à la version 2025.1 du schéma.
+
+	<?xml version="1.0" encoding="ISO-8859-1"?>
+	<Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5">
+		<P>
+			<Annee>2025</Annee>
+			<TypeEnvoi>4</TypeEnvoi>
+			<Preparateur>
+				<No>NP001151</No>
+				<Type>1</Type>
+				<Nom1>AGENCE</Nom1>
+				<Nom2>REVENU</Nom2>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ligne2>QUEBEC</Ligne2>
+					<Ville>QUEBEC</Ville>
+					<Province>QUEBEC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+			</Preparateur>
+			<Informatique>
+				<Nom>INFORMATICIEN</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Informatique>
+			<Comptabilite>
+				<Nom>COMPTABLE</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Comptabilite>
+			<NoCertification>RQ-25-01-010</NoCertification>
+			<NomLogiciel>LOGICIEL</NomLogiciel>
+			<VersionLogiciel>2025-01</VersionLogiciel>
+			<CourrielResponsable>COURRIEL@SERVEUR.COM</CourrielResponsable>
+			<IdPartenaireReleves>0000000000001234</IdPartenaireReleves>
+			<IdProduitReleves>0000000000001234</IdProduitReleves>
+		</P>
+		<Groupe01>
+			<A>
+				<Annee>2025</Annee>
+				<NoReleve>658211536</NoReleve>
+				<Identification>
+					<Employe>
+						<NAS>999999998</NAS>
+						<No>AWEN17097901</No>
+						<NomFamille>REVENU</NomFamille>
+						<Prenom>MARLY</Prenom>
+					</Employe>
+				</Identification>
+				<Adresse>
+					<Ligne1>13 RUE CUL-DE-SAC</Ligne1>
+					<Ville>SHERBROOKE</Ville>
+					<Province>QC</Province>
+					<CodePostal>G2G6Y4</CodePostal>
+				</Adresse>
+				<Montants>
+					<A_RevenuEmploi>12000,00</A_RevenuEmploi>
+					<B_CotisationRRQ>250,00</B_CotisationRRQ>
+					<O_AutreRevenu>
+						<MontantCaseO>3000,00</MontantCaseO>
+						<SourceCaseO>RB</SourceCaseO>
+					</O_AutreRevenu>
+				</Montants>
+				<CaseRensCompl>
+					<CodeRensCompl>A-1</CodeRensCompl>
+					<DonneeRensCompl>100,00</DonneeRensCompl>
+				</CaseRensCompl>
+				<CaseRensCompl>
+					<CodeRensCompl>A-2</CodeRensCompl>
+					<DonneeRensCompl>200,00</DonneeRensCompl>
+				</CaseRensCompl>
+				<NoReleveDerniereTrans>526220015</NoReleveDerniereTrans>
+			</A>
+			<A>
+				<Annee>2025</Annee>
+				<NoReleve>658211606</NoReleve>
+				<Identification>
+					<RaisonSociale>
+						<AutreNoId>1234567897</AutreNoId>
+						<Nom1>REVENU</Nom1>
+						<Nom2>MARLY</Nom2>
+					</RaisonSociale>
+				</Identification>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ville>QUEBEC</Ville>
+					<Province>QC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+				<Montants>
+					<H_CotisationRQAP>7000,00</H_CotisationRQAP>
+					<I_SalaireAdmisRQAP>0,00</I_SalaireAdmisRQAP>
+				</Montants>
+				<NoReleveDerniereTrans>679200012</NoReleveDerniereTrans>
+			</A>
+			<T>
+				<Annee>2025</Annee>
+				<NbReleves>2</NbReleves>
+				<Employeur>
+					<NoId>1006149487</NoId>
+					<TypeDossier>RS</TypeDossier>
+					<NoDossier>0002</NoDossier>
+					<Nom1>MEQ - DIRECTION</Nom1>
+					<Nom2>AIDE FINANCIERE AUX ETUDIANTS</Nom2>
+					<Adresse>
+						<Ligne1>1035, RUE DE LA CHEVROTIERE</Ligne1>
+						<Ligne2>EDIFICE MARIE-GUYART</Ligne2>
+						<Ville>LAVAL</Ville>
+						<Province>QUEBEC</Province>
+						<CodePostal>G1R5A5</CodePostal>
+					</Adresse>
+				</Employeur>
+			</T>
+		</Groupe01>
+	</Transmission>
+
+
+	Finalement, l'exemple suivant illustre une transmission de relevés 1 annulés conforme à la version 2025.1 du schéma.
+
+	<?xml version="1.0" encoding="ISO-8859-1"?>
+	<Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5">
+		<P>
+			<Annee>2025</Annee>
+			<TypeEnvoi>6</TypeEnvoi>
+			<Preparateur>
+				<No>NP001151</No>
+				<Type>1</Type>
+				<Nom1>AGENCE</Nom1>
+				<Nom2>REVENU</Nom2>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ligne2>QUEBEC</Ligne2>
+					<Ville>QUEBEC</Ville>
+					<Province>QUEBEC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+			</Preparateur>
+			<Informatique>
+				<Nom>INFORMATICIEN</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Informatique>
+			<Comptabilite>
+				<Nom>COMPTABLE</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Comptabilite>
+			<NoCertification>RQ-25-01-010</NoCertification>
+			<NomLogiciel>LOGICIEL</NomLogiciel>
+			<VersionLogiciel>2025-01</VersionLogiciel>
+			<CourrielResponsable>COURRIEL@SERVEUR.COM</CourrielResponsable>
+			<IdPartenaireReleves>0000000000001234</IdPartenaireReleves>
+			<IdProduitReleves>0000000000001234</IdProduitReleves>
+		</P>
+		<Groupe01>
+			<D>
+				<Annee>2025</Annee>
+				<NoReleve>658211536</NoReleve>
+				<Identification>
+					<Employe>
+						<NAS>999999998</NAS>
+						<NomFamille>REVENU</NomFamille>
+						<Prenom>MARLY</Prenom>
+					</Employe>
+				</Identification>
+			</D>
+			<D>
+				<Annee>2025</Annee>
+				<NoReleve>658211606</NoReleve>
+				<Identification>
+					<RaisonSociale>
+						<AutreNoId>1234567897</AutreNoId>
+						<Nom1>REVENU</Nom1>
+						<Nom2>MARLY</Nom2>
+					</RaisonSociale>
+				</Identification>
+			</D>
+			<T>
+				<Annee>2025</Annee>
+				<NbReleves>2</NbReleves>
+				<Employeur>
+					<NoId>1006149487</NoId>
+					<TypeDossier>RS</TypeDossier>
+					<NoDossier>0002</NoDossier>
+					<Nom1>MEQ - DIRECTION</Nom1>
+					<Nom2>AIDE FINANCIERE AUX ETUDIANTS</Nom2>
+					<Adresse>
+						<Ligne1>1035, RUE DE LA CHEVROTIERE</Ligne1>
+						<Ligne2>EDIFICE MARIE-GUYART</Ligne2>
+						<Ville>LAVAL</Ville>
+						<Province>QUEBEC</Province>
+						<CodePostal>G1R5A5</CodePostal>
+					</Adresse>
+				</Employeur>
+			</T>
+		</Groupe01>
+	</Transmission>
+
+9. RENSEIGNEMENTS SUPPLÉMENTAIRES
+
+	Pour tout renseignement supplémentaire ou toute correspondance concernant la relation de Revenu QUEBEC avec ses partenaires
+	du domaine d'activité des relevés, concernant le processus de validation des fichiers-tests, concernant des formulaires à
+	remplir avant le processus de validation ou encore concernant votre inscription à titre de concepteur, adressez-vous à:
+
+	Direction des relations avec les partenaires
+	Revenu QUEBEC
+	3800, RUE DE MARLY, secteur 2-4-9
+	QUEBEC (QUEBEC) G1X 4A5
+
+	Téléphone : 418 266-1201
+	1 866 840-7060
+	Courriel : infoconcepteur@revenuquebec.ca

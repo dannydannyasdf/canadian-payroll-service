@@ -1,0 +1,46 @@
+#### Record of changes (XML schemas) ####
+
+# Version 2025.1 (10-28-2025) 
+
+Valid for the 2025 taxation year.
+Contains the schema for RL-1, RL-2, RL-3, RL-5, RL-6, RL-7, RL-8, RL-10, RL-11, RL-13, RL-14, RL-15, RL-16,  
+RL-18, RL-21, RL-22, RL-24, RL-25, RL-26, RL-27, RL-29, RL-31, RL-32, RL-4E and RL-4O slips.
+
+Important changes: 
+
+- All RL-slips:
+	- Element "Langue" under "P/Informatique" has been removed.
+	- Element "Langue" under "P/Comptabilite" has been removed.
+	- Element "CourrielLangue" under "P" has been removed.
+	
+- RL-1: Additional information "L-11" to "L-13" have been removed.
+
+- RL-2: 
+	- Element "Montants" is now optional to allow filling additional information only.
+	- Additional information "C-6" now accepts 0 as a value.
+
+- RL-3: Additional information "I-1" and "I-2" have been removed.
+
+- RL-5: Many boxes have been removed. Details can be found in the Guide de préparation du relevé 5 (SW-305).
+	
+- RL-8: The possible values for box A_EtudesPostSecondaires have been changed.
+
+- RL-15: 
+	- Element "NoCompteFiducieFederal" has been added under "Associe".
+	- New values have been added to box C73_CodeFrais (A.3, A.4, B.3, B.4, C.1, D.1).
+	- Additional information "1-12", "12-17" and "14-7" have been added for cryptoassets.
+	- Additional information "11-5" to "11-7", "11-9", "12-10" to "12-16", "45-1" and "45-2" have been removed.
+	- Additional information "202" has been added for functional currency code (USD, EUR, GBP, AUD, JPY).
+
+- RL-16:
+	- The format for box "NoCompteFiducieFederal" has been changed. The first character can now be any letter.
+	- Additional information "A-5" to "A-9", "H-4" to "H-6" and "H-8" to "H-10" have been removed.
+
+- RL-24: Box "NoFich" now accepts from 1 to 10 characters (instead of a fixed length of 10 characters).
+	
+- RL-25: Additional information "B-2", "B-3", "C-3" and "C-4" have been removed.
+	
+- RL-31: 
+	- The element "Locataire" is now limited to 15 occurrences. 
+	- A new validation will make sure that the number of occurrences of "Locataire" is less than or equal to the amount filled 
+	  in box "B_NbLocataires".

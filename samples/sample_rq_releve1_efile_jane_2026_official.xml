@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Transmission xmlns="http://www.mrq.gouv.qc.ca/T5" VersionSchema="2025.1">
+  <P>
+    <Annee>2026</Annee>
+    <TypeEnvoi>1</TypeEnvoi>
+    <Preparateur>
+      <No>NP100625</No>
+      <Type>1</Type>
+      <Nom1>Gamma Personnel Inc.</Nom1>
+      <Adresse>
+        <Ligne1>B301-2001 University, C.P. 713</Ligne1>
+        <Ville>Montréal</Ville>
+        <Province>QC</Province>
+        <CodePostal>H3A3S9</CodePostal>
+      </Adresse>
+    </Preparateur>
+    <Informatique>
+      <Nom>Danny Majerovich</Nom>
+      <IndRegional>514</IndRegional>
+      <Tel>555-0100</Tel>
+    </Informatique>
+    <Comptabilite>
+      <Nom>Danny Majerovich</Nom>
+      <IndRegional>514</IndRegional>
+      <Tel>555-0100</Tel>
+    </Comptabilite>
+    <NoCertification>RQ-26-01-010</NoCertification>
+    <NomLogiciel>Canadian Payroll Service</NomLogiciel>
+    <VersionLogiciel>2026-01</VersionLogiciel>
+    <CourrielResponsable>payroll@gamma.example</CourrielResponsable>
+    <IdPartenaireReleves>0000000000000271</IdPartenaireReleves>
+    <IdProduitReleves>0000000000000271</IdProduitReleves>
+  </P>
+  <Groupe01>
+    <R>
+      <Annee>2026</Annee>
+      <NoReleve>260000001</NoReleve>
+      <Identification>
+        <Employe>
+          <NAS>130692544</NAS>
+          <NomFamille>Freelancer</NomFamille>
+          <Prenom>Jane</Prenom>
+        </Employe>
+      </Identification>
+      <Adresse>
+        <Ligne1>Adresse non fournie</Ligne1>
+      </Adresse>
+      <Montants>
+        <A_RevenuEmploi>10000,00</A_RevenuEmploi>
+        <BA_CotisationRRQ>576,00</BA_CotisationRRQ>
+        <C_CotisationAssEmploi>164,00</C_CotisationAssEmploi>
+        <E_ImpotQue>2200,00</E_ImpotQue>
+        <G_SalaireAdmisRRQ>10000,00</G_SalaireAdmisRRQ>
+        <I_SalaireAdmisRQAP>10000,00</I_SalaireAdmisRQAP>
+      </Montants>
+    </R>
+    <T>
+      <Annee>2026</Annee>
+      <NbReleves>1</NbReleves>
+      <Employeur>
+        <NoId>1142427765</NoId>
+        <TypeDossier>RS</TypeDossier>
+        <NoDossier>0271</NoDossier>
+        <NEQ>1142427765</NEQ>
+        <Nom1>Acme Productions Ltd.@Gamma</Nom1>
+        <Nom2>Personnel Inc.</Nom2>
+        <Adresse>
+          <Ligne1>B301-2001 University, C.P. 713</Ligne1>
+          <Ville>Montréal</Ville>
+          <Province>QC</Province>
+          <CodePostal>H3A3S9</CodePostal>
+        </Adresse>
+      </Employeur>
+    </T>
+  </Groupe01>
+</Transmission>

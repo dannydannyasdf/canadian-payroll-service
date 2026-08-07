@@ -34,7 +34,7 @@
 | 6.1 | T4 PDF (official CRA form overlay when available) |
 | 6.2 | Relevé 1 PDF |
 | 6.3 | CRA T4 e-file XML (official XSD when present, else preview schema) |
-| 6.4 | Revenu Québec Relevé 1 e-file XML (preview schema; QC employment province only) |
+| 6.4 | Revenu Québec Relevé 1 e-file XML (official `Transmission.xsd` when present, else preview schema; QC employment province only) |
 
 **Onboarding (implemented, separate from Phase 6 numbering):**
 - Slices 1–2: Employer/employee registration API
@@ -103,7 +103,7 @@ canadian-payroll-service/
 ├── schemas/
 │   ├── payroll.xsd             # Ingress contract
 │   ├── cra/                    # Official CRA XSD subset + t4_efile_preview.xsd
-│   └── rq/                     # releve1_efile_preview.xsd (+ official RQ XSDs later)
+│   └── rq/                     # Official RQ XSD package + releve1_efile_preview.xsd fallback
 ├── samples/                    # sample_payroll.json/xml, tax slip expected outputs
 ├── kong/kong.yml
 ├── nginx/nginx.conf
@@ -171,6 +171,12 @@ PAYROLL_CRA_PAYROLL_ACCOUNT=10668 8385 RP0001   # spaced on PDF; stripped for XM
 PAYROLL_CRA_TRANSMITTER_BN9 → derived from payroll account (106688385)
 PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE=ON
 PAYROLL_RQ_EMPLOYER_ID=1234567890              # GP's Revenu Québec dossier ID
+PAYROLL_RQ_PARTNER_REGISTRATION=I1000625       # Gamma Personnel partner registration
+PAYROLL_RQ_NEQ=1142427765                      # Gamma Personnel NEQ (shown on RL-1 PDF)
+PAYROLL_RQ_PARTNER_ID=0000000000000271         # Gamma Personnel partner identifier
+PAYROLL_RQ_PREPARATEUR_NO=NP100625              # Preparer number (NP######) for P block
+PAYROLL_RQ_CERTIFICATION_NO=RQ-26-01-010       # Software certification number
+PAYROLL_RQ_DOSSIER_NO=0271                     # 4-digit dossier number on T summary
 PAYROLL_CLIENT_LOGO_PATH / PAYROLL_PROVIDER_LOGO_PATH
 DEMO_API_KEY=gamma-dev-api-key
 DATABASE_URL=postgresql+psycopg://payroll:payroll@db:5432/payroll

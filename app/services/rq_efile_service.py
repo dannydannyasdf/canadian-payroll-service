@@ -1,12 +1,14 @@
 """Generate Revenu Québec Relevé 1 e-file XML from stored YTD totals.
 
-Exports validate against the internal preview schema (releve1_efile_preview.xsd).
-Official Revenu Québec XSD packages can be added later under schemas/rq/.
+When the official schema package is present under schemas/rq/, exports validate
+against Transmission.xsd and use Revenu Québec element names. Otherwise we fall
+back to the internal preview schema (releve1_efile_preview.xsd).
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 
 import xmlschema
@@ -14,21 +16,40 @@ from lxml import etree
 from sqlalchemy.orm import Session, joinedload
 
 from app.db_models import EmployeeRecord, YtdRecord
-from app.models.tax_slip import Releve1SlipPreview
+from app.models.tax_slip import Releve1SlipPreview, TaxPartyAddress
 from app.services.provider_config import (
+    CONTACT_AREA,
+    CONTACT_EMAIL,
+    CONTACT_PHONE,
+    DEFAULT_EMPLOYMENT_PROVINCE,
+    PROVIDER_ADDRESS_LINE1,
+    PROVIDER_CITY,
     PROVIDER_CONTACT_NAME,
     PROVIDER_NAME,
-    RQ_EMPLOYER_ID,
+    PROVIDER_POSTAL_CODE,
+    PROVIDER_PROVINCE,
+    RQ_CERTIFICATION_NO,
+    RQ_DOSSIER_NO,
+    RQ_NEQ,
+    RQ_PARTNER_ID,
+    RQ_PREPARATEUR_NO,
+    RQ_PRODUCT_ID,
+    RQ_SCHEMA_VERSION,
+    RQ_SOFTWARE_NAME,
+    RQ_SOFTWARE_VERSION,
 )
 from app.services.stub_archive_service import EmployeeNotFoundError
 from app.services.tax_slip_service import build_releve1_preview
 
 RQ_SCHEMA_DIR = Path(__file__).resolve().parents[2] / "schemas" / "rq"
 RQ_EFILE_PREVIEW_XSD = RQ_SCHEMA_DIR / "releve1_efile_preview.xsd"
+RQ_OFFICIAL_TRANSMISSION_XSD = RQ_SCHEMA_DIR / "Transmission.xsd"
+OFFICIAL_RQ_PACKAGE_FILES = ("Transmission.xsd", "P.xsd", "Groupes.xsd", "R01.xsd", "T01.xsd")
 RQ_PREVIEW_NS = "https://payroll.example.ca/schema/rq-efile-preview/v1"
 RQ_PREVIEW_NSMAP = {None: RQ_PREVIEW_NS}
+RQ_OFFICIAL_NS = "http://www.mrq.gouv.qc.ca/T5"
+RQ_OFFICIAL_NSMAP = {None: RQ_OFFICIAL_NS}
 QC_PROVINCE = "QC"
-RELEVE1_BOXES = ("A", "B", "C", "E", "G", "I")
 
 
 class RqFilingNotFoundError(Exception):
@@ -47,14 +68,53 @@ class RqFilingNotApplicableError(Exception):
         )
 
 
+@lru_cache(maxsize=1)
+def _get_official_schema() -> xmlschema.XMLSchema | None:
+    if not RQ_OFFICIAL_TRANSMISSION_XSD.is_file():
+        return None
+    try:
+        return xmlschema.XMLSchema(str(RQ_OFFICIAL_TRANSMISSION_XSD))
+    except xmlschema.XMLSchemaParseError:
+        return None
+
+
+def official_schema_available() -> bool:
+    return _get_official_schema() is not None
+
+
 def rq_schema_inventory() -> dict[str, object]:
+    missing_files = [
+        name for name in OFFICIAL_RQ_PACKAGE_FILES if not (RQ_SCHEMA_DIR / name).is_file()
+    ]
+    official_schema = _get_official_schema()
+    official_loadable = official_schema is not None
+    official_error: str | None = None
+
+    if not RQ_OFFICIAL_TRANSMISSION_XSD.is_file():
+        official_error = "Official Transmission.xsd not found."
+    elif missing_files:
+        official_error = f"Missing schema files: {', '.join(missing_files)}"
+    elif not official_loadable:
+        official_error = "Official transmission schema failed to load."
+
     preview_available = RQ_EFILE_PREVIEW_XSD.is_file()
     return {
         "schemaDir": str(RQ_SCHEMA_DIR),
         "previewSchema": RQ_EFILE_PREVIEW_XSD.name if preview_available else None,
-        "officialSchemaAvailable": False,
-        "activeValidationSchema": RQ_EFILE_PREVIEW_XSD.name if preview_available else None,
-        "rqEmployerIdConfigured": bool(RQ_EMPLOYER_ID),
+        "officialTransmissionSchema": (
+            RQ_OFFICIAL_TRANSMISSION_XSD.name if RQ_OFFICIAL_TRANSMISSION_XSD.is_file() else None
+        ),
+        "officialSchemaVersion": RQ_SCHEMA_VERSION if official_loadable else None,
+        "missingOfficialSchemas": missing_files,
+        "officialSchemaAvailable": official_loadable,
+        "officialSchemaError": official_error,
+        "activeValidationSchema": (
+            RQ_OFFICIAL_TRANSMISSION_XSD.name
+            if official_loadable
+            else (RQ_EFILE_PREVIEW_XSD.name if preview_available else None)
+        ),
+        "rqEmployerIdConfigured": bool(RQ_NEQ),
+        "rqPartnerIdConfigured": bool(RQ_PARTNER_ID),
     }
 
 
@@ -63,6 +123,20 @@ def _split_employee_name(full_name: str) -> tuple[str, str]:
     if len(parts) == 1:
         return parts[0], parts[0]
     return parts[-1], " ".join(parts[:-1])
+
+
+def _split_name_lines(name: str, *, max_len: int = 30) -> tuple[str, str | None]:
+    text = name.strip()
+    if len(text) <= max_len:
+        return text, None
+    split_at = text.rfind(" ", 0, max_len + 1)
+    if split_at <= 0:
+        return text[:max_len], text[max_len : max_len * 2] or None
+    first = text[:split_at].strip()
+    second = text[split_at:].strip() or None
+    if second and len(second) > max_len:
+        second = second[:max_len]
+    return first, second
 
 
 def _normalize_sin(sin: str) -> str:
@@ -78,9 +152,17 @@ def _rq_amount(value: str | Decimal) -> str:
     return f"{_money(value):.2f}"
 
 
-def _employment_province(slip: Releve1SlipPreview) -> str:
-    from app.services.provider_config import DEFAULT_EMPLOYMENT_PROVINCE
+def _rq_official_amount(value: str | Decimal) -> str:
+    return _rq_amount(value).replace(".", ",")
 
+
+def _postal_code(value: str | None) -> str | None:
+    if not value:
+        return None
+    return value.replace(" ", "").upper()
+
+
+def _employment_province(slip: Releve1SlipPreview) -> str:
     province = (
         slip.employee.employmentProvince
         or slip.employee.address.province
@@ -99,15 +181,154 @@ def _append_text(parent: etree._Element, tag: str, value: str | Decimal | int | 
     child.text = text
 
 
+def _append_address(parent: etree._Element, address: TaxPartyAddress, *, fallback_line1: str) -> None:
+    adresse = etree.SubElement(parent, "Adresse")
+    _append_text(adresse, "Ligne1", (address.line1 or fallback_line1)[:30])
+    if address.city:
+        _append_text(adresse, "Ville", address.city[:30])
+    if address.province:
+        _append_text(adresse, "Province", address.province[:20])
+    postal_code = _postal_code(address.postalCode)
+    if postal_code:
+        _append_text(adresse, "CodePostal", postal_code)
+
+
+def _releve_number(slip: Releve1SlipPreview) -> str:
+    return f"{slip.taxYear % 100:02d}{slip.employee.id:07d}"
+
+
 def _sum_boxes(slips: list[Releve1SlipPreview], box: str) -> Decimal:
     return sum((_money(slip.boxes[box]) for slip in slips), Decimal("0.00"))
+
+
+# --- Official Revenu Québec XML ------------------------------------------------
+
+
+def _build_official_p_block(tax_year: int) -> etree._Element:
+    p = etree.Element("P")
+    _append_text(p, "Annee", str(tax_year))
+    _append_text(p, "TypeEnvoi", "1")
+
+    preparateur = etree.SubElement(p, "Preparateur")
+    _append_text(preparateur, "No", RQ_PREPARATEUR_NO)
+    _append_text(preparateur, "Type", "1")
+    nom1, nom2 = _split_name_lines(PROVIDER_NAME)
+    _append_text(preparateur, "Nom1", nom1)
+    if nom2:
+        _append_text(preparateur, "Nom2", nom2)
+    adresse = etree.SubElement(preparateur, "Adresse")
+    _append_text(adresse, "Ligne1", PROVIDER_ADDRESS_LINE1[:30])
+    _append_text(adresse, "Ville", PROVIDER_CITY[:30])
+    _append_text(adresse, "Province", PROVIDER_PROVINCE[:20])
+    _append_text(adresse, "CodePostal", _postal_code(PROVIDER_POSTAL_CODE))
+
+    informatique = etree.SubElement(p, "Informatique")
+    _append_text(informatique, "Nom", PROVIDER_CONTACT_NAME[:30])
+    _append_text(informatique, "IndRegional", CONTACT_AREA)
+    _append_text(informatique, "Tel", CONTACT_PHONE)
+
+    comptabilite = etree.SubElement(p, "Comptabilite")
+    _append_text(comptabilite, "Nom", PROVIDER_CONTACT_NAME[:30])
+    _append_text(comptabilite, "IndRegional", CONTACT_AREA)
+    _append_text(comptabilite, "Tel", CONTACT_PHONE)
+
+    _append_text(p, "NoCertification", RQ_CERTIFICATION_NO)
+    _append_text(p, "NomLogiciel", RQ_SOFTWARE_NAME[:40])
+    _append_text(p, "VersionLogiciel", RQ_SOFTWARE_VERSION[:15])
+    _append_text(p, "CourrielResponsable", CONTACT_EMAIL[:60])
+    _append_text(p, "IdPartenaireReleves", RQ_PARTNER_ID)
+    _append_text(p, "IdProduitReleves", RQ_PRODUCT_ID)
+    return p
+
+
+def _build_official_montants(parent: etree._Element, boxes: dict[str, str]) -> None:
+    montants = etree.SubElement(parent, "Montants")
+    _append_text(montants, "A_RevenuEmploi", _rq_official_amount(boxes["A"]))
+    _append_text(montants, "BA_CotisationRRQ", _rq_official_amount(boxes["B"]))
+    _append_text(montants, "C_CotisationAssEmploi", _rq_official_amount(boxes["C"]))
+    _append_text(montants, "E_ImpotQue", _rq_official_amount(boxes["E"]))
+    _append_text(montants, "G_SalaireAdmisRRQ", _rq_official_amount(boxes["G"]))
+    _append_text(montants, "I_SalaireAdmisRQAP", _rq_official_amount(boxes["I"]))
+
+
+def _build_official_r_slip(slip: Releve1SlipPreview) -> etree._Element:
+    surname, given_name = _split_employee_name(slip.employee.name)
+    r_el = etree.Element("R")
+    _append_text(r_el, "Annee", str(slip.taxYear))
+    _append_text(r_el, "NoReleve", _releve_number(slip))
+
+    identification = etree.SubElement(r_el, "Identification")
+    employe = etree.SubElement(identification, "Employe")
+    _append_text(employe, "NAS", _normalize_sin(slip.employee.sin))
+    _append_text(employe, "NomFamille", surname[:30])
+    _append_text(employe, "Prenom", given_name[:30])
+
+    _append_address(r_el, slip.employee.address, fallback_line1="Adresse non fournie")
+    _build_official_montants(r_el, slip.boxes)
+    return r_el
+
+
+def _build_official_t_summary(slips: list[Releve1SlipPreview], tax_year: int) -> etree._Element:
+    employer = slips[0].employer
+    t_el = etree.Element("T")
+    _append_text(t_el, "Annee", str(tax_year))
+    _append_text(t_el, "NbReleves", len(slips))
+
+    employeur = etree.SubElement(t_el, "Employeur")
+    _append_text(employeur, "NoId", RQ_NEQ)
+    _append_text(employeur, "TypeDossier", "RS")
+    _append_text(employeur, "NoDossier", RQ_DOSSIER_NO)
+    _append_text(employeur, "NEQ", RQ_NEQ)
+
+    nom1, nom2 = _split_name_lines(employer.name)
+    _append_text(employeur, "Nom1", nom1)
+    if nom2:
+        _append_text(employeur, "Nom2", nom2)
+
+    _append_address(employeur, employer.address, fallback_line1=PROVIDER_ADDRESS_LINE1)
+    return t_el
+
+
+def build_official_rq_submission_xml(slips: list[Releve1SlipPreview], tax_year: int) -> str:
+    if not slips:
+        raise RqFilingNotFoundError(tax_year)
+
+    root = etree.Element("Transmission", nsmap=RQ_OFFICIAL_NSMAP)
+    root.set("VersionSchema", RQ_SCHEMA_VERSION)
+    root.append(_build_official_p_block(tax_year))
+
+    groupe = etree.SubElement(root, "Groupe01")
+    for slip in slips:
+        groupe.append(_build_official_r_slip(slip))
+    groupe.append(_build_official_t_summary(slips, tax_year))
+
+    xml_bytes = etree.tostring(
+        root,
+        xml_declaration=True,
+        encoding="UTF-8",
+        pretty_print=True,
+    )
+    return xml_bytes.decode("utf-8")
+
+
+def validate_official_rq_efile_xml(xml_text: str) -> None:
+    schema = _get_official_schema()
+    if schema is None:
+        raise ValueError("Official Revenu Québec transmission schema is not available.")
+    try:
+        schema.validate(xml_text)
+    except xmlschema.XMLSchemaValidationError as exc:
+        raise ValueError(f"Invalid official Relevé 1 e-file XML: {exc.reason}") from exc
+
+
+# --- Preview XML (fallback) ---------------------------------------------------
 
 
 def _build_transmitter() -> etree._Element:
     transmitter = etree.Element("Transmitter")
     _append_text(transmitter, "name", PROVIDER_NAME)
     _append_text(transmitter, "contactName", PROVIDER_CONTACT_NAME)
-    _append_text(transmitter, "rqEmployerId", RQ_EMPLOYER_ID)
+    _append_text(transmitter, "rqEmployerId", RQ_NEQ)
     return transmitter
 
 
@@ -138,7 +359,7 @@ def _build_releve1_slip(slip: Releve1SlipPreview) -> etree._Element:
 def _build_releve1_summary(slips: list[Releve1SlipPreview]) -> etree._Element:
     summary = etree.Element("Releve1Summary")
     _append_text(summary, "employerName", slips[0].employer.name[:100])
-    _append_text(summary, "rqEmployerId", RQ_EMPLOYER_ID)
+    _append_text(summary, "rqEmployerId", RQ_NEQ)
     _append_text(summary, "totBoxA", _rq_amount(_sum_boxes(slips, "A")))
     _append_text(summary, "totBoxB", _rq_amount(_sum_boxes(slips, "B")))
     _append_text(summary, "totBoxC", _rq_amount(_sum_boxes(slips, "C")))
@@ -182,10 +403,22 @@ def validate_preview_rq_efile_xml(xml_text: str) -> None:
         raise ValueError(f"Invalid Relevé 1 e-file preview XML: {exc.reason}") from exc
 
 
+# --- Public API ---------------------------------------------------------------
+
+
 def build_and_validate_rq_submission_xml(
     slips: list[Releve1SlipPreview],
     tax_year: int,
+    *,
+    official: bool | None = None,
 ) -> str:
+    use_official = official_schema_available() if official is None else official
+
+    if use_official:
+        xml_text = build_official_rq_submission_xml(slips, tax_year)
+        validate_official_rq_efile_xml(xml_text)
+        return xml_text
+
     xml_text = build_preview_rq_submission_xml(slips, tax_year)
     validate_preview_rq_efile_xml(xml_text)
     return xml_text
@@ -201,13 +434,20 @@ def build_employee_releve1_efile_xml(
     db: Session,
     employee_id: int,
     tax_year: int,
+    *,
+    official: bool | None = None,
 ) -> str:
     slip = build_releve1_preview(db, employee_id, tax_year)
     _require_quebec_employment(slip)
-    return build_and_validate_rq_submission_xml([slip], tax_year)
+    return build_and_validate_rq_submission_xml([slip], tax_year, official=official)
 
 
-def build_rq_filing_xml(db: Session, tax_year: int) -> str:
+def build_rq_filing_xml(
+    db: Session,
+    tax_year: int,
+    *,
+    official: bool | None = None,
+) -> str:
     rows = (
         db.query(YtdRecord)
         .options(joinedload(YtdRecord.employee).joinedload(EmployeeRecord.employer))
@@ -227,4 +467,4 @@ def build_rq_filing_xml(db: Session, tax_year: int) -> str:
     if not previews:
         raise RqFilingNotFoundError(tax_year)
 
-    return build_and_validate_rq_submission_xml(previews, tax_year)
+    return build_and_validate_rq_submission_xml(previews, tax_year, official=official)

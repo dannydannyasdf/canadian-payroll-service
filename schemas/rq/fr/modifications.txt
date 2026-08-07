@@ -1,0 +1,47 @@
+#### Historique des modifications des schémas XML ####
+
+# Version 2025.1 (2025-10-28) 
+
+Valide pour l'année d'imposition 2025.
+Contient le schéma des relevés 1, 2, 3, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 18, 21, 22, 24, 25, 26, 27, 29, 31, 32 
+et des feuillets 4E et 4O.
+
+Changements importants: 
+
+- Tous les relevés :
+	- L'élément « Langue » sous « P/Informatique » a été retiré.
+	- L'élément « Langue » sous « P/Comptabilite » a été retiré.
+	- L'élément « CourrielLangue » sous « P » a été retiré.
+	
+- Relevé 1 : Les renseignements complémentaires « L-11 » à « L-13 » ont été retirés.
+
+- Relevé 2 : 
+	- L'élément « Montants » est maintenant facultatif pour permettre de fournir uniquement des renseignements complémentaires.
+	- Le renseignement complémentaire « C-6 » permet maintenant la valeur 0.
+
+- Relevé 3 : Les renseignements complémentaires « I-1 » et « I-2 » ont été retirés.
+
+- Relevé 5 : Plusieurs cases ont été retirées. Les détails peuvent être retrouvés dans le 
+             Guide de préparation du relevé 5 (SW-305).
+	
+- Relevé 8 : Les montants possibles à la case A_EtudesPostSecondaires ont été modifiés.
+
+- Relevé 15 : 
+	- L'élément « NoCompteFiducieFederal » a été ajouté sous « Associe ».
+	- De nouvelles valeurs ont été ajoutées à la case C73_CodeFrais (A.3, A.4, B.3, B.4, C.1, D.1).
+	- Les renseignements complémentaires « 1-12 », « 12-17 » et « 14-7 » ont été ajoutés pour les cryptoactifs.
+	- Les renseignements complémentaires « 11-5 » à « 11-7 », « 11-9 », « 12-10 » à « 12-16 », « 45-1 » et « 45-2 » ont été retirés.
+	- Le renseignement complémentaire « 202 » a été ajouté pour le code de monnaie fonctionnelle (USD, EUR, GBP, AUD, JPY).
+
+- Relevé 16 :
+	- Le format de la case « NoCompteFiducieFederal » a été modifié. Le premier caractère peut maintenant être n'importe quelle lettre.
+	- Les renseignements complémentaires « A-5 » à « A-9 », « H-4 » à « H-6 » et « H-8 » à « H-10 » ont été retirés.
+
+- Relevé 24 : La case « NoFich » accepte maintenant entre 1 à 10 caractères (plutôt qu'une taille fixe de 10 caractères).
+	
+- Relevé 25 : Les renseignements complémentaires « B-2 », « B-3 », « C-3 » et « C-4 » ont été retirés.
+	
+- Relevé 31 : 
+	- L'élément « Locataire » est maintenant limité à 15 occurrences. 
+	- Une nouvelle validation permettra de s'assurer que le nombre d'occurrences de « Locataire » est plus petit ou égal au nombre inscrit 
+	  à la case « B_NbLocataires ».

@@ -7,6 +7,7 @@ from weasyprint import HTML
 
 from app.models.tax_slip import Releve1SlipPreview, T4SlipPreview, TaxPartyAddress
 from app.services.t4_official_form import official_t4_form_available, render_t4_official_form_pdf
+from app.services.releve1_official_form import official_releve1_form_available, render_releve1_official_form_pdf
 
 APP_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = APP_DIR.parent
@@ -109,4 +110,6 @@ def render_t4_pdf(slip: T4SlipPreview) -> bytes:
 
 
 def render_releve1_pdf(slip: Releve1SlipPreview) -> bytes:
+    if official_releve1_form_available():
+        return render_releve1_official_form_pdf(slip)
     return _render_tax_slip_pdf("releve1.html", slip, RELEVE1_BOX_ORDER)

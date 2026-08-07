@@ -36,6 +36,7 @@ from app.services.rq_efile_service import (
     RqFilingNotFoundError,
     build_employee_releve1_efile_xml,
     build_rq_filing_xml,
+    official_schema_available,
     rq_schema_inventory,
 )
 from app.services.xml_validator import validate_payroll_xml
@@ -259,11 +260,16 @@ def preview_t4_slip(
 def download_releve1_efile_xml(
     employee_id: int,
     tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    official: bool | None = Query(
+        default=None, description="Use official Revenu Québec schema when true"
+    ),
     db: Session = Depends(get_db),
 ) -> Response:
     """Download a Revenu Québec Relevé 1 e-file XML bundle for one employee (Quebec only)."""
     try:
-        xml_text = build_employee_releve1_efile_xml(db, employee_id, tax_year)
+        xml_text = build_employee_releve1_efile_xml(
+            db, employee_id, tax_year, official=official
+        )
     except EmployeeNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except YtdNotFoundError as exc:
@@ -273,7 +279,12 @@ def download_releve1_efile_xml(
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    filename = f"rq-releve1-{employee_id}-{tax_year}-preview.xml"
+    suffix = (
+        "official"
+        if (official or (official is None and official_schema_available()))
+        else "preview"
+    )
+    filename = f"rq-releve1-{employee_id}-{tax_year}-{suffix}.xml"
     return Response(
         content=xml_text,
         media_type="application/xml",
@@ -290,17 +301,25 @@ def rq_schema_status() -> dict[str, object]:
 @router.get("/tax-filing/rq")
 def download_rq_filing_xml(
     tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    official: bool | None = Query(
+        default=None, description="Use official Revenu Québec schema when true"
+    ),
     db: Session = Depends(get_db),
 ) -> Response:
     """Download a Revenu Québec Relevé 1 e-file XML bundle for all QC employees in a tax year."""
     try:
-        xml_text = build_rq_filing_xml(db, tax_year)
+        xml_text = build_rq_filing_xml(db, tax_year, official=official)
     except RqFilingNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    filename = f"rq-releve1-filing-{tax_year}-preview.xml"
+    suffix = (
+        "official"
+        if (official or (official is None and official_schema_available()))
+        else "preview"
+    )
+    filename = f"rq-releve1-filing-{tax_year}-{suffix}.xml"
     return Response(
         content=xml_text,
         media_type="application/xml",

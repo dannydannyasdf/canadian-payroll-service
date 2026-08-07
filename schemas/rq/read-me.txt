@@ -1,0 +1,449 @@
+-------------------------------------------------------------
+XML schema for transmitting RL-slip data files in XML format.
+-------------------------------------------------------------
+
+Revenu QUEBEC, October 28, 2025
+
+This document provides technical information on the use of schemas for transmitting 
+RL-slip data files in XML format.
+
+
+1. TERMINOLOGY
+
+	The terms "schema" and "XML schema" refer to the language that defines the structure 
+	and constrains the content of XML documents, as described in specification
+	"W3C XML Schema Part 1," available at http://www.w3.org/TR/xmlschema-1/. 
+	This language is used to construct and validate XML documents.
+
+	The term "XML document" refers to a text document that conforms to specification 
+	"W3C XML 1.0," available at http://www.w3.org/TR/REC-xml/. An XML document is valid when 
+	its structure conforms to the corresponding schema.
+
+
+2. FILE STRUCTURE
+
+	The schema for transmitting RL-slip data files in XML format comprises several files 
+	having the extension .xsd, as dividing the data into several files facilitates retrieval.
+
+	To validate an XML document, you must use the schema's master file (Transmission.xsd), 
+	which includes all the other files by reference.
+
+
+3. NAMESPACE
+
+	A namespace is used to standardize the nomenclature of the elements and attributes
+	specific to an application domain and to prevent name conflicts in XML documents.
+
+	The namespace is specified in the "targetNamespace" attribute of the schema root element. 
+	The schema namespace for the transmission of RL-slip data is: 
+	http://www.mrq.gouv.qc.ca/T5. This name has the format of an Internet address that leads to 
+	information on the schema (this address is not yet available).
+
+
+4. VERSION
+
+	The "version" attribute indicates the version of a schema, e.g., 
+		<xsd:schema targetNamespace="http://www.mrq.gouv.qc.ca/T5" version="2025.1" ...>
+
+	Schemas are subject to change, and Revenu QUEBEC may decide to no longer support obsolete versions.
+	You must therefore watch for announcements of schema updates and, if applicable, download the
+	latest version. Changes to the schemas are given in the /en/Change-log.txt.
+
+	IMPORTANT: The schema version used to construct an RL-slip data transmission document 
+	must be indicated in the VersionSchema attribute of the Transmission element. 
+	This information enables the applications to validate the document using the same version
+	of the schema that you used, e.g.,
+		<Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5">
+
+
+5. SCHEMA AND NAMESPACE
+	
+	A transmission file contains a reference to a namespace through the "xmlns" attribute. This 
+	links the definitions made in the schema and the tags used in the transmission file.
+
+	Some validating parsers require an actual reference to the schema file in order to perform 
+	the validation.	This is done with an attribute found in the schema namespace called 
+	"schemaLocation". This attribute use two parameters, the first is the namespace for the schema 
+	and the second is the URI to the schema definition file. Since it is an attribute from another
+	schema, its namespace must be defined in order to be used, this is done with the same attribute 
+	as before: "xmlns", e.g.,
+	        <Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5"
+	                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                              xsi:schemaLocation="http://www.mrq.gouv.qc.ca/T5 Transmission.xsd">
+
+	In order for this definition to work, the transmission file must be in the same folder as the 
+	schema files.
+
+
+6. VALIDATING PARSER
+
+	A validating parser is software that is used to verify that an XML document conforms to a schema. 
+	This software is not provided by Revenu QUEBEC. The following is a list of some of the parsers 
+	available on the market:
+
+	XML editors that provide a validating parser:
+		XML Spy   (http://www.altova.com/products_ide.html)
+		XMLWriter (http://www.xmlwriter.net/)
+		Stylus    (http://www.stylusstudio.com/)
+		XRay      (http://architag.com/xray/)
+		XMLMind   (http://www.xmlmind.com/xmleditor/)
+		Cooktop   (http://www.xmlcooktop.com/)
+
+	Librairies that include XML validating parser:
+		MSXML     (http://www.microsoft.com/downloads/details.aspx?familyid=3144b72b-b4f2-46da-b4b6-c5d7485f2b42)
+		.NET      (http://www.microsoft.com/downloads/details.aspx?familyid=9B3A2CA6-3647-4070-9F41-A333C6B9181D)
+		JAXP      (http://java.sun.com/xml/jaxp/index.jsp)
+		XERCES-J  (http://xml.apache.org/xerces-j/)
+		ORACLE    (http://www.oracle.com/technology/tech/xml/index.html)
+
+
+7. CODING AND SPECIAL CHARACTERS
+
+	XML files must indicate their encoding, and you must state this encoding in the file header as 
+	follows: <?xml version="1.0" encoding="ISO-8859-1"?>. A number of forms of encoding correspond 
+	in general to the environment you use. The most frequent encodings are ISO-8859-1 and UTF-8. The 
+	encoding tag must reflect the encoding used in your file. (extract from	IN-800.V section 5.2.2).
+
+	Replace the special characters <, >, ', " and & with their corresponding XML entity (&lt;, &gt;,
+	&apos;, &quot; and &amp;) in the content of alphanumeric fields. You may include the characters 
+	" and ' as is in the content of a field. Note that there are only those 5 entities defined in
+	XML while there are a number of others in HTML. It is not useful to use hexadecimal entity since
+	your encoding includes the needed characters.
+
+	Correct samples:
+		<Ligne1>3800, rue Cité de l'Ampoule</Ligne1>
+		<Ligne1>3800, rue Cité de l&apos;Ampoule</Ligne1>
+
+		The accented character is not replaced by its hexadecimal value since the encoding allows for 
+		its presence.
+
+8. EXAMPLE OF AN XML DOCUMENT
+
+	The following example illustrates an official RL-1 slip data transmission that conforms to the 2025.1 
+	version of the schema.
+
+	<?xml version="1.0" encoding="ISO-8859-1"?>
+	<Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5">
+		<P>
+			<Annee>2025</Annee>
+			<TypeEnvoi>1</TypeEnvoi>
+			<Preparateur>
+				<No>NP001151</No>
+				<Type>1</Type>
+				<Nom1>AGENCE</Nom1>
+				<Nom2>REVENU</Nom2>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ligne2>QUEBEC</Ligne2>
+					<Ville>QUEBEC</Ville>
+					<Province>QUEBEC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+			</Preparateur>
+			<Informatique>
+				<Nom>INFORMATICIEN</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Informatique>
+			<Comptabilite>
+				<Nom>COMPTABLE</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Comptabilite>
+			<NoCertification>RQ-25-01-010</NoCertification>
+			<NomLogiciel>LOGICIEL</NomLogiciel>
+			<VersionLogiciel>2025-01</VersionLogiciel>
+			<CourrielResponsable>COURRIEL@SERVEUR.COM</CourrielResponsable>
+			<IdPartenaireReleves>0000000000001234</IdPartenaireReleves>
+			<IdProduitReleves>0000000000001234</IdProduitReleves>
+		</P>
+		<Groupe01>
+			<R>
+				<Annee>2025</Annee>
+				<NoReleve>526220015</NoReleve>
+				<Identification>
+					<Employe>
+						<NAS>999999998</NAS>
+						<No>AWEN17097901</No>
+						<NomFamille>REVENU</NomFamille>
+						<Prenom>MARLY</Prenom>
+					</Employe>
+				</Identification>
+				<Adresse>
+					<Ligne1>13 RUE CUL-DE-SAC</Ligne1>
+					<Ville>SHERBROOKE</Ville>
+					<Province>QC</Province>
+					<CodePostal>G2G6Y4</CodePostal>
+				</Adresse>
+				<Montants>
+					<A_RevenuEmploi>12000,00</A_RevenuEmploi>
+					<B_CotisationRRQ>250,00</B_CotisationRRQ>
+					<O_AutreRevenu>
+						<MontantCaseO>3000,00</MontantCaseO>
+						<SourceCaseO>RB</SourceCaseO>
+					</O_AutreRevenu>
+				</Montants>
+				<CaseRensCompl>
+					<CodeRensCompl>A-1</CodeRensCompl>
+					<DonneeRensCompl>100,00</DonneeRensCompl>
+				</CaseRensCompl>
+				<CaseRensCompl>
+					<CodeRensCompl>A-2</CodeRensCompl>
+					<DonneeRensCompl>200,00</DonneeRensCompl>
+				</CaseRensCompl>
+			</R>
+			<R>
+				<Annee>2025</Annee>
+				<NoReleve>679200012</NoReleve>
+				<Identification>
+					<RaisonSociale>
+						<AutreNoId>1234567897</AutreNoId>
+						<Nom1>REVENU</Nom1>
+						<Nom2>MARLY</Nom2>
+					</RaisonSociale>
+				</Identification>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ville>QUEBEC</Ville>
+					<Province>QC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+				<Montants>
+					<H_CotisationRQAP>7000,00</H_CotisationRQAP>
+					<I_SalaireAdmisRQAP>0,00</I_SalaireAdmisRQAP>
+				</Montants>
+			</R>
+			<T>
+				<Annee>2025</Annee>
+				<NbReleves>2</NbReleves>
+				<Employeur>
+					<NoId>1006149487</NoId>
+					<TypeDossier>RS</TypeDossier>
+					<NoDossier>0002</NoDossier>
+					<Nom1>MEQ - DIRECTION</Nom1>
+					<Nom2>AIDE FINANCIERE AUX ETUDIANTS</Nom2>
+					<Adresse>
+						<Ligne1>1035, RUE DE LA CHEVROTIERE</Ligne1>
+						<Ligne2>EDIFICE MARIE-GUYART</Ligne2>
+						<Ville>LAVAL</Ville>
+						<Province>QUEBEC</Province>
+						<CodePostal>G1R5A5</CodePostal>
+					</Adresse>
+				</Employeur>
+			</T>
+		</Groupe01>
+	</Transmission>
+
+	The following example illustrates an amended RL-1 slip data transmission that conforms to the 2025.1 
+	version of the schema.
+
+	<?xml version="1.0" encoding="ISO-8859-1"?>
+	<Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5">
+		<P>
+			<Annee>2025</Annee>
+			<TypeEnvoi>4</TypeEnvoi>
+			<Preparateur>
+				<No>NP001151</No>
+				<Type>1</Type>
+				<Nom1>AGENCE</Nom1>
+				<Nom2>REVENU</Nom2>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ligne2>QUEBEC</Ligne2>
+					<Ville>QUEBEC</Ville>
+					<Province>QUEBEC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+			</Preparateur>
+			<Informatique>
+				<Nom>INFORMATICIEN</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Informatique>
+			<Comptabilite>
+				<Nom>COMPTABLE</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Comptabilite>
+			<NoCertification>RQ-25-01-010</NoCertification>
+			<NomLogiciel>LOGICIEL</NomLogiciel>
+			<VersionLogiciel>2025-01</VersionLogiciel>
+			<CourrielResponsable>COURRIEL@SERVEUR.COM</CourrielResponsable>
+			<IdPartenaireReleves>0000000000001234</IdPartenaireReleves>
+			<IdProduitReleves>0000000000001234</IdProduitReleves>
+		</P>
+		<Groupe01>
+			<A>
+				<Annee>2025</Annee>
+				<NoReleve>658211536</NoReleve>
+				<Identification>
+					<Employe>
+						<NAS>999999998</NAS>
+						<No>AWEN17097901</No>
+						<NomFamille>REVENU</NomFamille>
+						<Prenom>MARLY</Prenom>
+					</Employe>
+				</Identification>
+				<Adresse>
+					<Ligne1>13 RUE CUL-DE-SAC</Ligne1>
+					<Ville>SHERBROOKE</Ville>
+					<Province>QC</Province>
+					<CodePostal>G2G6Y4</CodePostal>
+				</Adresse>
+				<Montants>
+					<A_RevenuEmploi>12000,00</A_RevenuEmploi>
+					<B_CotisationRRQ>250,00</B_CotisationRRQ>
+					<O_AutreRevenu>
+						<MontantCaseO>3000,00</MontantCaseO>
+						<SourceCaseO>RB</SourceCaseO>
+					</O_AutreRevenu>
+				</Montants>
+				<CaseRensCompl>
+					<CodeRensCompl>A-1</CodeRensCompl>
+					<DonneeRensCompl>100,00</DonneeRensCompl>
+				</CaseRensCompl>
+				<CaseRensCompl>
+					<CodeRensCompl>A-2</CodeRensCompl>
+					<DonneeRensCompl>200,00</DonneeRensCompl>
+				</CaseRensCompl>
+				<NoReleveDerniereTrans>526220015</NoReleveDerniereTrans>
+			</A>
+			<A>
+				<Annee>2025</Annee>
+				<NoReleve>658211606</NoReleve>
+				<Identification>
+					<RaisonSociale>
+						<AutreNoId>1234567897</AutreNoId>
+						<Nom1>REVENU</Nom1>
+						<Nom2>MARLY</Nom2>
+					</RaisonSociale>
+				</Identification>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ville>QUEBEC</Ville>
+					<Province>QC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+				<Montants>
+					<H_CotisationRQAP>7000,00</H_CotisationRQAP>
+					<I_SalaireAdmisRQAP>0,00</I_SalaireAdmisRQAP>
+				</Montants>
+				<NoReleveDerniereTrans>679200012</NoReleveDerniereTrans>
+			</A>
+			<T>
+				<Annee>2025</Annee>
+				<NbReleves>2</NbReleves>
+				<Employeur>
+					<NoId>1006149487</NoId>
+					<TypeDossier>RS</TypeDossier>
+					<NoDossier>0002</NoDossier>
+					<Nom1>MEQ - DIRECTION</Nom1>
+					<Nom2>AIDE FINANCIERE AUX ETUDIANTS</Nom2>
+					<Adresse>
+						<Ligne1>1035, RUE DE LA CHEVROTIERE</Ligne1>
+						<Ligne2>EDIFICE MARIE-GUYART</Ligne2>
+						<Ville>LAVAL</Ville>
+						<Province>QUEBEC</Province>
+						<CodePostal>G1R5A5</CodePostal>
+					</Adresse>
+				</Employeur>
+			</T>
+		</Groupe01>
+	</Transmission>
+
+	The following example illustrates a cancelled RL-1 slip data transmission that conforms to the 2025.1 
+	version of the schema.
+
+	<?xml version="1.0" encoding="ISO-8859-1"?>
+	<Transmission VersionSchema="2025.1" xmlns="http://www.mrq.gouv.qc.ca/T5">
+		<P>
+			<Annee>2025</Annee>
+			<TypeEnvoi>6</TypeEnvoi>
+			<Preparateur>
+				<No>NP001151</No>
+				<Type>1</Type>
+				<Nom1>AGENCE</Nom1>
+				<Nom2>REVENU</Nom2>
+				<Adresse>
+					<Ligne1>3800, RUE DE MARLY</Ligne1>
+					<Ligne2>QUEBEC</Ligne2>
+					<Ville>QUEBEC</Ville>
+					<Province>QUEBEC</Province>
+					<CodePostal>G1X4A5</CodePostal>
+				</Adresse>
+			</Preparateur>
+			<Informatique>
+				<Nom>INFORMATICIEN</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Informatique>
+			<Comptabilite>
+				<Nom>COMPTABLE</Nom>
+				<IndRegional>418</IndRegional>
+				<Tel>659-6299</Tel>
+			</Comptabilite>
+			<NoCertification>RQ-25-01-010</NoCertification>
+			<NomLogiciel>LOGICIEL</NomLogiciel>
+			<VersionLogiciel>2025-01</VersionLogiciel>
+			<CourrielResponsable>COURRIEL@SERVEUR.COM</CourrielResponsable>
+			<IdPartenaireReleves>0000000000001234</IdPartenaireReleves>
+			<IdProduitReleves>0000000000001234</IdProduitReleves>
+		</P>
+		<Groupe01>
+			<D>
+				<Annee>2025</Annee>
+				<NoReleve>658211536</NoReleve>
+				<Identification>
+					<Employe>
+						<NAS>999999998</NAS>
+						<NomFamille>REVENU</NomFamille>
+						<Prenom>MARLY</Prenom>
+					</Employe>
+				</Identification>
+			</D>
+			<D>
+				<Annee>2025</Annee>
+				<NoReleve>658211606</NoReleve>
+				<Identification>
+					<RaisonSociale>
+						<AutreNoId>1234567897</AutreNoId>
+						<Nom1>REVENU</Nom1>
+						<Nom2>MARLY</Nom2>
+					</RaisonSociale>
+				</Identification>
+			</D>
+			<T>
+				<Annee>2025</Annee>
+				<NbReleves>2</NbReleves>
+				<Employeur>
+					<NoId>1006149487</NoId>
+					<TypeDossier>RS</TypeDossier>
+					<NoDossier>0002</NoDossier>
+					<Nom1>MEQ - DIRECTION</Nom1>
+					<Nom2>AIDE FINANCIERE AUX ETUDIANTS</Nom2>
+					<Adresse>
+						<Ligne1>1035, RUE DE LA CHEVROTIERE</Ligne1>
+						<Ligne2>EDIFICE MARIE-GUYART</Ligne2>
+						<Ville>LAVAL</Ville>
+						<Province>QUEBEC</Province>
+						<CodePostal>G1R5A5</CodePostal>
+					</Adresse>
+				</Employeur>
+			</T>
+		</Groupe01>
+	</Transmission>
+
+9. ADDITIONAL INFORMATION
+
+	Address all correspondence and requests for information pertaining to relations between Revenu QUEBEC and its partners
+	in the RL slip field of activity, the test file validation process, the forms to be completed before the validation
+	process or your registration as a developer to:
+
+	Direction des relations avec les partenaires
+	Revenu QUEBEC
+	3800, RUE DE MARLY, secteur 2-4-9
+	QUEBEC (QUEBEC) G1X 4A5
+
+	Telephone number: 418 266-1201
+	1 866 840-7060
+	E-mail address: infoconcepteur@revenuquebec.ca
