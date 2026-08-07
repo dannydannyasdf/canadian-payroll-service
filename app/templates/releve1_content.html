@@ -1,0 +1,56 @@
+<span class="preview-badge">Aperçu — ne pas produire</span>
+
+<h1>Relevé 1 — Revenus d'emploi et revenus assimilés</h1>
+<p class="tax-year">Année d'imposition {{ tax_year }}</p>
+
+<div class="party-grid">
+  <div class="party-block">
+    <h2>Employeur</h2>
+    <div class="party-name">{{ employer_name }}</div>
+    {% if employer_business_number %}
+    <span class="party-line">Numéro d'entreprise : {{ employer_business_number }}</span>
+    {% endif %}
+    {% if employer_payroll_account %}
+    <span class="party-line">Compte de paie : {{ employer_payroll_account }}</span>
+    {% endif %}
+    {% for line in employer_address_lines %}
+    <span class="party-line">{{ line }}</span>
+    {% endfor %}
+  </div>
+
+  <div class="party-block">
+    <h2>Employé</h2>
+    <div class="party-name">{{ employee_name }}</div>
+    <span class="party-line">NAS : {{ employee_sin }}</span>
+    {% for line in employee_address_lines %}
+    <span class="party-line">{{ line }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<table class="t4-boxes">
+  <thead>
+    <tr>
+      <th>Case</th>
+      <th>Description</th>
+      <th>Montant</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for box_num in box_order %}
+    <tr>
+      <td class="box-num">{{ box_num }}</td>
+      <td class="box-label">{{ box_labels[box_num] }}</td>
+      <td class="box-amount">{{ formatted_boxes[box_num] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if disclaimers %}
+<ul class="disclaimers">
+  {% for note in disclaimers %}
+  <li>{{ note }}</li>
+  {% endfor %}
+</ul>
+{% endif %}

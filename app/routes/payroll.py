@@ -10,7 +10,7 @@ from app.models.employee import EmployeeSummary
 from app.models.payroll import PayrollPayload
 from app.models.tax_slip import Releve1SlipPreview, T4SlipPreview
 from app.services.billing_service import record_billing_event
-from app.services.pdf_generator import render_pay_stub_archive_pdf, render_pay_stub_pdf, render_t4_pdf
+from app.services.pdf_generator import render_pay_stub_archive_pdf, render_pay_stub_pdf, render_releve1_pdf, render_t4_pdf
 from app.services.stub_archive_service import (
     EmployeeNotFoundError,
     StubArchiveNotFoundError,
@@ -164,17 +164,41 @@ def preview_t4_slip(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+@router.get("/employees/{employee_id}/releve1/pdf")
+def download_releve1_pdf(
+    employee_id: int,
+    tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    db: Session = Depends(get_db),
+) -> Response:
+    """
+    Download a Relevé 1 slip PDF mapped from stored YTD totals.
+
+    Preview layout only — not an Revenu Québec-official form. Requires API key through Kong.
+    """
+    try:
+        slip = build_releve1_preview(db, employee_id, tax_year)
+    except EmployeeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except YtdNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    pdf_bytes = render_releve1_pdf(slip)
+    filename = f"releve1-{employee_id}-{tax_year}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
+
+
 @router.get("/employees/{employee_id}/releve1", response_model=Releve1SlipPreview)
 def preview_releve1_slip(
     employee_id: int,
     tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
     db: Session = Depends(get_db),
 ) -> Releve1SlipPreview:
-    """
-    Preview Revenu Québec Relevé 1 box values mapped from stored YTD totals.
-
-    Phase 6 prep — JSON only. PDF generation and RQ e-file XML come next.
-    """
+    """Preview Revenu Québec Relevé 1 box values mapped from stored YTD totals (JSON)."""
     try:
         return build_releve1_preview(db, employee_id, tax_year)
     except EmployeeNotFoundError as exc:

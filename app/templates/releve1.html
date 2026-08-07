@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+  <meta charset="utf-8">
+  <title>Relevé 1 {{ tax_year }} — {{ employee_name }}</title>
+  {% include "pay_stub_styles.html" %}
+  {% include "t4_styles.html" %}
+</head>
+<body>
+  {% include "pay_stub_header.html" %}
+  {% include "releve1_content.html" %}
+</body>
+</html>

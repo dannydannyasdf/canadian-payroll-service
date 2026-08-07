@@ -338,6 +338,7 @@
       <button type="submit" id="submit-btn">Generate PDF</button>
       <button type="button" id="download-all-btn" class="secondary-action">Download All Periods</button>
       <button type="button" id="download-t4-btn" class="secondary-action">Download T4 (preview)</button>
+      <button type="button" id="download-releve1-btn" class="secondary-action">Download Relevé 1 (preview)</button>
     </form>
 
     <div id="result" class="card" hidden>
@@ -348,6 +349,7 @@
         <a id="download-pdf" href="#" download="pay-stub.pdf">Download PDF</a>
         <button type="button" id="download-all-result-btn" class="secondary-action">Download All Periods</button>
         <button type="button" id="download-t4-result-btn" class="secondary-action">Download T4 (preview)</button>
+        <button type="button" id="download-releve1-result-btn" class="secondary-action">Download Relevé 1 (preview)</button>
       </div>
       <iframe id="pdf-frame" title="Pay stub preview"></iframe>
     </div>
@@ -368,6 +370,8 @@
     const downloadAllResultBtn = document.getElementById("download-all-result-btn");
     const downloadT4Btn = document.getElementById("download-t4-btn");
     const downloadT4ResultBtn = document.getElementById("download-t4-result-btn");
+    const downloadReleve1Btn = document.getElementById("download-releve1-btn");
+    const downloadReleve1ResultBtn = document.getElementById("download-releve1-result-btn");
     const result = document.getElementById("result");
     const ytdSummary = document.getElementById("ytd-summary");
     const openPdf = document.getElementById("open-pdf");
@@ -514,10 +518,9 @@
       }
     }
 
-    async function downloadT4Preview(button) {
+    async function downloadTaxSlipPdf(button, config) {
       clearMessage();
-      const buttons = [downloadT4Btn, downloadT4ResultBtn];
-      const originalText = button.textContent;
+      const { path, label, filePrefix, buttons, idleText } = config;
       buttons.forEach((btn) => {
         btn.disabled = true;
         btn.textContent = "Downloading…";
@@ -527,12 +530,12 @@
         const employeeId = await resolveEmployeeId();
         const taxYear = lastTaxYear || taxYearFromForm();
         const response = await fetch(
-          `/payroll/employees/${employeeId}/t4/pdf?taxYear=${taxYear}`,
+          `/payroll/employees/${employeeId}/${path}?taxYear=${taxYear}`,
           { headers: { apikey: apiKey } },
         );
 
         if (!response.ok) {
-          let detail = "T4 download failed.";
+          let detail = `${label} download failed.`;
           try {
             const data = await response.json();
             detail = data.detail || detail;
@@ -547,16 +550,16 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `t4-${employeeId}-${taxYear}.pdf`;
+        link.download = `${filePrefix}-${employeeId}-${taxYear}.pdf`;
         link.click();
         URL.revokeObjectURL(url);
-        showMessage(`Downloaded T4 preview for ${taxYear}.`, "success");
+        showMessage(`Downloaded ${label} preview for ${taxYear}.`, "success");
       } catch (err) {
         showMessage(err.message, "error");
       } finally {
         buttons.forEach((btn) => {
           btn.disabled = false;
-          btn.textContent = "Download T4 (preview)";
+          btn.textContent = idleText;
         });
       }
     }
@@ -590,8 +593,34 @@
 
     downloadAllBtn.addEventListener("click", downloadAllPeriods);
     downloadAllResultBtn.addEventListener("click", downloadAllPeriods);
-    downloadT4Btn.addEventListener("click", () => downloadT4Preview(downloadT4Btn));
-    downloadT4ResultBtn.addEventListener("click", () => downloadT4Preview(downloadT4ResultBtn));
+    downloadT4Btn.addEventListener("click", () => downloadTaxSlipPdf(downloadT4Btn, {
+      path: "t4/pdf",
+      label: "T4",
+      filePrefix: "t4",
+      buttons: [downloadT4Btn, downloadT4ResultBtn],
+      idleText: "Download T4 (preview)",
+    }));
+    downloadT4ResultBtn.addEventListener("click", () => downloadTaxSlipPdf(downloadT4ResultBtn, {
+      path: "t4/pdf",
+      label: "T4",
+      filePrefix: "t4",
+      buttons: [downloadT4Btn, downloadT4ResultBtn],
+      idleText: "Download T4 (preview)",
+    }));
+    downloadReleve1Btn.addEventListener("click", () => downloadTaxSlipPdf(downloadReleve1Btn, {
+      path: "releve1/pdf",
+      label: "Relevé 1",
+      filePrefix: "releve1",
+      buttons: [downloadReleve1Btn, downloadReleve1ResultBtn],
+      idleText: "Download Relevé 1 (preview)",
+    }));
+    downloadReleve1ResultBtn.addEventListener("click", () => downloadTaxSlipPdf(downloadReleve1ResultBtn, {
+      path: "releve1/pdf",
+      label: "Relevé 1",
+      filePrefix: "releve1",
+      buttons: [downloadReleve1Btn, downloadReleve1ResultBtn],
+      idleText: "Download Relevé 1 (preview)",
+    }));
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();

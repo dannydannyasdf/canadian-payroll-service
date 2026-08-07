@@ -1,0 +1,47 @@
+{
+  "taxYear": 2026,
+  "employee": {
+    "id": 1,
+    "name": "Jane Freelancer",
+    "sin": "123-456-789",
+    "address": {
+      "line1": null,
+      "city": null,
+      "province": null,
+      "postalCode": null
+    }
+  },
+  "employer": {
+    "name": "Acme Personnel Inc.",
+    "businessNumber": null,
+    "payrollAccountNumber": null,
+    "address": {
+      "line1": null,
+      "city": null,
+      "province": null,
+      "postalCode": null
+    }
+  },
+  "boxes": {
+    "A": "10000.00",
+    "B": "576.00",
+    "C": "164.00",
+    "E": "2200.00",
+    "G": "10000.00",
+    "I": "10000.00"
+  },
+  "boxLabels": {
+    "A": "Revenus d'emploi et revenus assimilés",
+    "B": "Cotisation au RRQ",
+    "C": "Cotisation assurance emploi",
+    "E": "Impôt du Québec retenu",
+    "G": "Salaire admissible au RRQ",
+    "I": "Salaire admissible à l'assurance emploi"
+  },
+  "disclaimers": [
+    "Preview mapping only — not a filing-ready Relevé 1.",
+    "Box B uses the stored CPP/QPP total from pay stubs.",
+    "Box E uses the full income tax total until provincial split exists."
+  ],
+  "status": "preview"
+}

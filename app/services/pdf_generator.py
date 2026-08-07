@@ -5,7 +5,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
 
-from app.models.tax_slip import T4SlipPreview, TaxPartyAddress
+from app.models.tax_slip import Releve1SlipPreview, T4SlipPreview, TaxPartyAddress
 
 APP_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = APP_DIR.parent
@@ -62,6 +62,7 @@ def render_pay_stub_archive_pdf(stubs: list[dict]) -> bytes:
 
 
 T4_BOX_ORDER = ("14", "16", "18", "22", "24", "26")
+RELEVE1_BOX_ORDER = ("A", "B", "C", "E", "G", "I")
 
 
 def _format_address_lines(address: TaxPartyAddress) -> list[str]:
@@ -80,9 +81,9 @@ def _format_box_amount(amount: str) -> str:
     return f"${Decimal(amount):,.2f}"
 
 
-def render_t4_pdf(slip: T4SlipPreview) -> bytes:
+def _render_tax_slip_pdf(template_name: str, slip: T4SlipPreview | Releve1SlipPreview, box_order: tuple[str, ...]) -> bytes:
     formatted_boxes = {box: _format_box_amount(amount) for box, amount in slip.boxes.items()}
-    template = _template_env().get_template("t4.html")
+    template = _template_env().get_template(template_name)
     html = template.render(
         tax_year=slip.taxYear,
         employer_name=slip.employer.name,
@@ -92,10 +93,18 @@ def render_t4_pdf(slip: T4SlipPreview) -> bytes:
         employee_name=slip.employee.name,
         employee_sin=slip.employee.sin,
         employee_address_lines=_format_address_lines(slip.employee.address),
-        box_order=T4_BOX_ORDER,
+        box_order=box_order,
         box_labels=slip.boxLabels,
         formatted_boxes=formatted_boxes,
         disclaimers=slip.disclaimers,
         **_brand_context(),
     )
     return HTML(string=html, base_url=str(TEMPLATES_DIR)).write_pdf()
+
+
+def render_t4_pdf(slip: T4SlipPreview) -> bytes:
+    return _render_tax_slip_pdf("t4.html", slip, T4_BOX_ORDER)
+
+
+def render_releve1_pdf(slip: Releve1SlipPreview) -> bytes:
+    return _render_tax_slip_pdf("releve1.html", slip, RELEVE1_BOX_ORDER)
