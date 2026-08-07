@@ -1,0 +1,10 @@
+# Canadian Payroll Service
+
+Before planning or making changes in this repo, read **PROJECT_CONTEXT.md** at the project root and follow it as the source of truth for:
+
+- Business model (Gamma Personnel proxy payroll)
+- Architecture, stack, and folder layout
+- API contracts, onboarding rules, and tax-slip behavior
+- Environment defaults and operational constraints
+
+If PROJECT_CONTEXT.md and the code disagree, ask before changing either. Do not revert to dropped architectures (Java/Spring, XSL-FO, Bitcoin).

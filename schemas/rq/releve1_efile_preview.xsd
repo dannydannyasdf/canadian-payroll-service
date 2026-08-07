@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://payroll.example.ca/schema/rq-efile-preview/v1"
+           xmlns="https://payroll.example.ca/schema/rq-efile-preview/v1"
+           elementFormDefault="qualified">
+
+  <xs:element name="Submission">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Transmitter" type="TransmitterType"/>
+        <xs:element name="Releve1Return" type="Releve1ReturnType"/>
+      </xs:sequence>
+      <xs:attribute name="taxYear" type="xs:gYear" use="required"/>
+      <xs:attribute name="status" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="TransmitterType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="contactName" type="xs:string" minOccurs="0"/>
+      <xs:element name="rqEmployerId" type="RqEmployerIdType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Releve1ReturnType">
+    <xs:sequence>
+      <xs:element name="Releve1Summary" type="Releve1SummaryType"/>
+      <xs:element name="Releve1Slip" type="Releve1SlipType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Releve1SummaryType">
+    <xs:sequence>
+      <xs:element name="employerName" type="xs:string"/>
+      <xs:element name="rqEmployerId" type="RqEmployerIdType"/>
+      <xs:element name="totBoxA" type="MoneyType"/>
+      <xs:element name="totBoxB" type="MoneyType"/>
+      <xs:element name="totBoxC" type="MoneyType"/>
+      <xs:element name="totBoxE" type="MoneyType"/>
+      <xs:element name="totBoxG" type="MoneyType"/>
+      <xs:element name="totBoxI" type="MoneyType"/>
+      <xs:element name="slipCount" type="xs:positiveInteger"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Releve1SlipType">
+    <xs:sequence>
+      <xs:element name="employeeName" type="EmployeeNameType"/>
+      <xs:element name="sin" type="SinType"/>
+      <xs:element name="reportTypeCode" type="ReportTypeCodeType"/>
+      <xs:element name="amounts" type="Releve1AmountsType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EmployeeNameType">
+    <xs:sequence>
+      <xs:element name="surname" type="xs:string"/>
+      <xs:element name="givenName" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Releve1AmountsType">
+    <xs:sequence>
+      <xs:element name="boxA" type="MoneyType"/>
+      <xs:element name="boxB" type="MoneyType"/>
+      <xs:element name="boxC" type="MoneyType"/>
+      <xs:element name="boxE" type="MoneyType"/>
+      <xs:element name="boxG" type="MoneyType"/>
+      <xs:element name="boxI" type="MoneyType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="MoneyType">
+    <xs:restriction base="xs:decimal">
+      <xs:fractionDigits value="2"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SinType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9]{9}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="RqEmployerIdType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+      <xs:maxLength value="20"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ReportTypeCodeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="O"/>
+      <xs:enumeration value="A"/>
+      <xs:enumeration value="C"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

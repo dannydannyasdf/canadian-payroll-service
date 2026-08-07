@@ -47,6 +47,7 @@ TRANSMITTER_BN9 = os.environ.get(
     "PAYROLL_CRA_TRANSMITTER_BN9",
     bn9_from_payroll_account(PAYROLL_ACCOUNT_DISPLAY) or "106688385",
 )
+RQ_EMPLOYER_ID = os.environ.get("PAYROLL_RQ_EMPLOYER_ID", "1234567890")
 
 
 def provider_address() -> TaxPartyAddress:
