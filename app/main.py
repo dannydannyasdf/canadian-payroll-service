@@ -22,7 +22,7 @@ app = FastAPI(
         "Generates pay stubs and tax documents. "
         "Accepts JSON (primary) or XML, returns cumulative YTD JSON plus PDF."
     ),
-    version="0.4.3",
+    version="0.4.4",
     lifespan=lifespan,
 )
 

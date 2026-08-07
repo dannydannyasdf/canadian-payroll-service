@@ -6,6 +6,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
 
 from app.models.tax_slip import Releve1SlipPreview, T4SlipPreview, TaxPartyAddress
+from app.services.t4_official_form import official_t4_form_available, render_t4_official_form_pdf
 
 APP_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = APP_DIR.parent
@@ -103,6 +104,8 @@ def _render_tax_slip_pdf(template_name: str, slip: T4SlipPreview | Releve1SlipPr
 
 
 def render_t4_pdf(slip: T4SlipPreview) -> bytes:
+    if official_t4_form_available():
+        return render_t4_official_form_pdf(slip)
     return _render_tax_slip_pdf("t4.html", slip, T4_BOX_ORDER)
 
 

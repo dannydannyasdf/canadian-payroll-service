@@ -20,6 +20,7 @@ COPY alembic/ ./alembic/
 COPY alembic.ini .
 COPY schemas/ ./schemas/
 COPY samples/ ./samples/
+COPY app/assets/ ./app/assets/
 COPY Images/ ./Images/
 
 EXPOSE 8000

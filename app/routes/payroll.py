@@ -131,11 +131,12 @@ def download_stub_archive(
 def download_t4_efile_xml(
     employee_id: int,
     tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    official: bool | None = Query(default=None, description="Use official CRA schema when true"),
     db: Session = Depends(get_db),
 ) -> Response:
-    """Download a CRA T4 e-file preview XML bundle for one employee."""
+    """Download a CRA T4 e-file XML bundle for one employee."""
     try:
-        xml_text = build_employee_t4_efile_xml(db, employee_id, tax_year)
+        xml_text = build_employee_t4_efile_xml(db, employee_id, tax_year, official=official)
     except EmployeeNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except YtdNotFoundError as exc:
@@ -143,7 +144,8 @@ def download_t4_efile_xml(
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    filename = f"cra-t4-{employee_id}-{tax_year}.xml"
+    suffix = "official" if (official or (official is None and cra_schema_inventory()["officialT4Loadable"])) else "preview"
+    filename = f"cra-t4-{employee_id}-{tax_year}-{suffix}.xml"
     return Response(
         content=xml_text,
         media_type="application/xml",
@@ -160,17 +162,19 @@ def cra_schema_status() -> dict[str, object]:
 @router.get("/tax-filing/cra")
 def download_cra_filing_xml(
     tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    official: bool | None = Query(default=None, description="Use official CRA schema when true"),
     db: Session = Depends(get_db),
 ) -> Response:
-    """Download a CRA T4 e-file preview XML bundle for all employees in a tax year."""
+    """Download a CRA T4 e-file XML bundle for all employees in a tax year."""
     try:
-        xml_text = build_cra_filing_xml(db, tax_year)
+        xml_text = build_cra_filing_xml(db, tax_year, official=official)
     except CraFilingNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    filename = f"cra-t4-filing-{tax_year}.xml"
+    suffix = "official" if (official or (official is None and cra_schema_inventory()["officialT4Loadable"])) else "preview"
+    filename = f"cra-t4-filing-{tax_year}-{suffix}.xml"
     return Response(
         content=xml_text,
         media_type="application/xml",

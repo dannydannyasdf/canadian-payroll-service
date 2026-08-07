@@ -1,37 +1,66 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Submission xmlns="https://payroll.example.ca/schema/cra-efile-preview/v1" taxYear="2026" status="preview">
+<Submission>
   <T619>
-    <transmitterName>Gamma Personnel Inc.</transmitterName>
-    <contactName>Danny Majerovich</contactName>
+    <TransmitterAccountNumber>
+      <bn9>000000000</bn9>
+    </TransmitterAccountNumber>
+    <sbmt_ref_id>26080701</sbmt_ref_id>
+    <summ_cnt>1</summ_cnt>
+    <lang_cd>E</lang_cd>
+    <TransmitterName>
+      <l1_nm>Gamma Personnel Inc.</l1_nm>
+    </TransmitterName>
+    <TransmitterCountryCode>CAN</TransmitterCountryCode>
+    <CNTC>
+      <cntc_nm>Danny Majerovich</cntc_nm>
+      <cntc_area_cd>514</cntc_area_cd>
+      <cntc_phn_nbr>555-0100</cntc_phn_nbr>
+      <cntc_email_area>payroll@gamma.example</cntc_email_area>
+    </CNTC>
   </T619>
-  <T4Return>
-    <T4Summary>
-      <payrollAccountNumber>000000000RP0000</payrollAccountNumber>
-      <totEmptIncamt>10000.00</totEmptIncamt>
-      <totQppCntrbAmt>576.00</totQppCntrbAmt>
-      <totEmpeEipAmt>164.00</totEmpeEipAmt>
-      <totItxDdctAmt>2200.00</totItxDdctAmt>
-      <totEiInsuErnAmt>10000.00</totEiInsuErnAmt>
-      <totCppQppErnAmt>10000.00</totCppQppErnAmt>
-      <slipCount>1</slipCount>
-    </T4Summary>
-    <T4Slip>
-      <employeeName>
-        <surname>Freelancer</surname>
-        <givenName>Jane</givenName>
-      </employeeName>
-      <sin>123456789</sin>
-      <payrollAccountNumber>000000000RP0000</payrollAccountNumber>
-      <reportTypeCode>O</reportTypeCode>
-      <employmentProvinceCode>QC</employmentProvinceCode>
-      <amounts>
-        <emptIncamt>10000.00</emptIncamt>
-        <qppCntrbAmt>576.00</qppCntrbAmt>
-        <empeEipAmt>164.00</empeEipAmt>
-        <itxDdctAmt>2200.00</itxDdctAmt>
-        <eiInsuErnAmt>10000.00</eiInsuErnAmt>
-        <cppQppErnAmt>10000.00</cppQppErnAmt>
-      </amounts>
-    </T4Slip>
-  </T4Return>
+  <Return>
+    <T4>
+      <T4Slip>
+        <EMPE_NM>
+          <snm>Freelancer</snm>
+          <gvn_nm>Jane</gvn_nm>
+        </EMPE_NM>
+        <sin>123456789</sin>
+        <bn>000000000RP0000</bn>
+        <cpp_qpp_xmpt_cd>0</cpp_qpp_xmpt_cd>
+        <ei_xmpt_cd>0</ei_xmpt_cd>
+        <rpt_tcd>O</rpt_tcd>
+        <empt_prov_cd>QC</empt_prov_cd>
+        <empr_dntl_ben_rpt_cd>1</empr_dntl_ben_rpt_cd>
+        <T4_AMT>
+          <empt_incamt>10000.00</empt_incamt>
+          <qpp_cntrb_amt>576.00</qpp_cntrb_amt>
+          <empe_eip_amt>164.00</empe_eip_amt>
+          <itx_ddct_amt>2200.00</itx_ddct_amt>
+          <ei_insu_ern_amt>10000.00</ei_insu_ern_amt>
+          <cpp_qpp_ern_amt>10000.00</cpp_qpp_ern_amt>
+        </T4_AMT>
+      </T4Slip>
+      <T4Summary>
+        <bn>000000000RP0000</bn>
+        <EMPR_NM>
+          <l1_nm>Acme Personnel Inc.</l1_nm>
+        </EMPR_NM>
+        <CNTC>
+          <cntc_nm>Danny Majerovich</cntc_nm>
+          <cntc_area_cd>514</cntc_area_cd>
+          <cntc_phn_nbr>555-0100</cntc_phn_nbr>
+        </CNTC>
+        <tx_yr>2026</tx_yr>
+        <slp_cnt>1</slp_cnt>
+        <rpt_tcd>O</rpt_tcd>
+        <T4_TAMT>
+          <tot_empt_incamt>10000.00</tot_empt_incamt>
+          <tot_empe_cpp_amt>576.00</tot_empe_cpp_amt>
+          <tot_empe_eip_amt>164.00</tot_empe_eip_amt>
+          <tot_itx_ddct_amt>2200.00</tot_itx_ddct_amt>
+        </T4_TAMT>
+      </T4Summary>
+    </T4>
+  </Return>
 </Submission>
