@@ -17,8 +17,7 @@ T4_FORM_PATH = Path(os.environ.get("PAYROLL_T4_FORM_PATH", DEFAULT_FORM_PATH))
 if not T4_FORM_PATH.exists() and PROJECT_FORM_PATH.exists():
     T4_FORM_PATH = PROJECT_FORM_PATH
 
-DEFAULT_PROVINCE = os.environ.get("PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE", "QC")
-DEFAULT_PAYROLL_ACCOUNT = os.environ.get("PAYROLL_CRA_PAYROLL_ACCOUNT", "000000000RP0000")
+from app.services.provider_config import DEFAULT_EMPLOYMENT_PROVINCE, PAYROLL_ACCOUNT_DISPLAY
 
 # Measured from t4-25e.pdf (letter, 612x792). Each entry is (x0, y0, x1, y1).
 TOP_COPY_FIELDS: dict[str, tuple[float, float, float, float]] = {
@@ -62,11 +61,11 @@ def _amount(value: str) -> str:
 
 
 def _payroll_account(slip: T4SlipPreview) -> str:
-    return slip.employer.payrollAccountNumber or DEFAULT_PAYROLL_ACCOUNT
+    return slip.employer.payrollAccountNumber or PAYROLL_ACCOUNT_DISPLAY
 
 
 def _employment_province(slip: T4SlipPreview) -> str:
-    province = slip.employee.address.province or slip.employer.address.province or DEFAULT_PROVINCE
+    province = slip.employee.address.province or DEFAULT_EMPLOYMENT_PROVINCE
     return province.upper()
 
 

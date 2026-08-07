@@ -4,10 +4,10 @@ from app.db_models import EmployeeRecord, YtdRecord
 from app.models.tax_slip import (
     Releve1SlipPreview,
     T4EmployeeSummary,
-    T4EmployerSummary,
     T4SlipPreview,
     TaxPartyAddress,
 )
+from app.services.provider_config import build_filing_employer_summary
 from app.services.stub_archive_service import EmployeeNotFoundError
 from app.tax.box_mapping import (
     RELEVE1_BOX_LABELS,
@@ -78,17 +78,7 @@ def build_t4_preview(db: Session, employee_id: int, tax_year: int) -> T4SlipPrev
                 employee.postal_code,
             ),
         ),
-        employer=T4EmployerSummary(
-            name=employer.name,
-            businessNumber=employer.business_number,
-            payrollAccountNumber=employer.payroll_account_number,
-            address=_party_address(
-                employer.address_line1,
-                employer.city,
-                employer.province,
-                employer.postal_code,
-            ),
-        ),
+        employer=build_filing_employer_summary(employer.name),
         boxes=map_ytd_to_t4_boxes(ytd),
         boxLabels=T4_BOX_LABELS,
         disclaimers=list(T4_PREP_DISCLAIMERS),
@@ -112,17 +102,7 @@ def build_releve1_preview(db: Session, employee_id: int, tax_year: int) -> Relev
                 employee.postal_code,
             ),
         ),
-        employer=T4EmployerSummary(
-            name=employer.name,
-            businessNumber=employer.business_number,
-            payrollAccountNumber=employer.payroll_account_number,
-            address=_party_address(
-                employer.address_line1,
-                employer.city,
-                employer.province,
-                employer.postal_code,
-            ),
-        ),
+        employer=build_filing_employer_summary(employer.name),
         boxes=map_ytd_to_releve1_boxes(ytd),
         boxLabels=RELEVE1_BOX_LABELS,
         disclaimers=list(RELEVE1_PREP_DISCLAIMERS),

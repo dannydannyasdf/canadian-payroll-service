@@ -33,14 +33,17 @@ OFFICIAL_CRA_PACKAGE_FILES = ("simple.xsd", "complex.xsd", "t4.xsd", "T619_T4.xs
 CRA_EFILE_PREVIEW_NS = "https://payroll.example.ca/schema/cra-efile-preview/v1"
 CRA_PREVIEW_NSMAP = {None: CRA_EFILE_PREVIEW_NS}
 
-DEFAULT_PAYROLL_ACCOUNT = os.environ.get("PAYROLL_CRA_PAYROLL_ACCOUNT", "000000000RP0000")
-DEFAULT_TRANSMITTER_BN9 = os.environ.get("PAYROLL_CRA_TRANSMITTER_BN9", "000000000")
-DEFAULT_PROVINCE = os.environ.get("PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE", "QC")
-TRANSMITTER_NAME = os.environ.get("PAYROLL_PROVIDER_NAME", "Gamma Personnel Inc.")
-CONTACT_NAME = os.environ.get("PAYROLL_PROVIDER_CONTACT_NAME", "Danny Majerovich")
-CONTACT_AREA = os.environ.get("PAYROLL_CRA_CONTACT_AREA", "514")
-CONTACT_PHONE = os.environ.get("PAYROLL_CRA_CONTACT_PHONE", "555-0100")
-CONTACT_EMAIL = os.environ.get("PAYROLL_CRA_CONTACT_EMAIL", "payroll@gamma.example")
+from app.services.provider_config import (
+    CONTACT_AREA,
+    CONTACT_EMAIL,
+    CONTACT_PHONE,
+    DEFAULT_EMPLOYMENT_PROVINCE,
+    PAYROLL_ACCOUNT_EFILE,
+    PROVIDER_CONTACT_NAME,
+    PROVIDER_NAME,
+    TRANSMITTER_BN9,
+    normalize_payroll_account,
+)
 
 
 class CraFilingNotFoundError(Exception):
@@ -113,11 +116,12 @@ def _cra_amount(value: str | Decimal) -> str:
 
 
 def _payroll_account(slip: T4SlipPreview) -> str:
-    return slip.employer.payrollAccountNumber or DEFAULT_PAYROLL_ACCOUNT
+    raw = slip.employer.payrollAccountNumber or PAYROLL_ACCOUNT_EFILE
+    return normalize_payroll_account(raw)
 
 
 def _employment_province(slip: T4SlipPreview) -> str:
-    province = slip.employee.address.province or slip.employer.address.province or DEFAULT_PROVINCE
+    province = slip.employee.address.province or DEFAULT_EMPLOYMENT_PROVINCE
     return province.upper()
 
 
@@ -142,19 +146,19 @@ def _build_official_t619() -> etree._Element:
     t619 = etree.Element("T619")
 
     account = etree.SubElement(t619, "TransmitterAccountNumber")
-    _append_text(account, "bn9", DEFAULT_TRANSMITTER_BN9)
+    _append_text(account, "bn9", TRANSMITTER_BN9)
 
     _append_text(t619, "sbmt_ref_id", _submission_reference_id())
     _append_text(t619, "summ_cnt", 1)
     _append_text(t619, "lang_cd", "E")
 
     transmitter_name = etree.SubElement(t619, "TransmitterName")
-    _append_text(transmitter_name, "l1_nm", TRANSMITTER_NAME[:35])
+    _append_text(transmitter_name, "l1_nm", PROVIDER_NAME[:35])
 
     _append_text(t619, "TransmitterCountryCode", "CAN")
 
     contact = etree.SubElement(t619, "CNTC")
-    _append_text(contact, "cntc_nm", CONTACT_NAME[:35])
+    _append_text(contact, "cntc_nm", PROVIDER_CONTACT_NAME[:35])
     _append_text(contact, "cntc_area_cd", CONTACT_AREA)
     _append_text(contact, "cntc_phn_nbr", CONTACT_PHONE)
     _append_text(contact, "cntc_email_area", CONTACT_EMAIL[:60])
@@ -221,7 +225,7 @@ def _build_official_t4_summary(slips: list[T4SlipPreview], tax_year: int) -> etr
     _append_text(employer_name, "l1_nm", employer.name[:100])
 
     contact = etree.SubElement(summary, "CNTC")
-    _append_text(contact, "cntc_nm", CONTACT_NAME[:100])
+    _append_text(contact, "cntc_nm", PROVIDER_CONTACT_NAME[:100])
     _append_text(contact, "cntc_area_cd", CONTACT_AREA)
     _append_text(contact, "cntc_phn_nbr", CONTACT_PHONE)
 
@@ -315,8 +319,8 @@ def build_preview_cra_submission_xml(slips: list[T4SlipPreview], tax_year: int) 
     root.set("status", "preview")
 
     t619 = etree.SubElement(root, "T619")
-    _append_text(t619, "transmitterName", TRANSMITTER_NAME)
-    _append_text(t619, "contactName", CONTACT_NAME)
+    _append_text(t619, "transmitterName", PROVIDER_NAME)
+    _append_text(t619, "contactName", PROVIDER_CONTACT_NAME)
 
     t4_return = etree.SubElement(root, "T4Return")
     summary = etree.SubElement(t4_return, "T4Summary")

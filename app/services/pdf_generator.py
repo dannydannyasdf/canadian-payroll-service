@@ -15,12 +15,11 @@ DEFAULT_CLIENT_LOGO = APP_DIR / "assets" / "company_logo.jpg"
 DEFAULT_PROVIDER_LOGO = PROJECT_DIR / "Images" / "Gamma_heads_Logo_Black.jpg"
 CLIENT_LOGO_PATH = Path(os.environ.get("PAYROLL_CLIENT_LOGO_PATH", DEFAULT_CLIENT_LOGO))
 PROVIDER_LOGO_PATH = Path(os.environ.get("PAYROLL_PROVIDER_LOGO_PATH", DEFAULT_PROVIDER_LOGO))
-PROVIDER_NAME = os.environ.get("PAYROLL_PROVIDER_NAME", "Gamma Personnel Inc.")
-PROVIDER_CONTACT_NAME = os.environ.get("PAYROLL_PROVIDER_CONTACT_NAME", "Danny Majerovich")
-PROVIDER_ADDRESS_LINES = [
-    "B301-2001 University, C.P. 71316",
-    "Montréal (Québec) H3A 3S9 CANADA",
-]
+from app.services.provider_config import (
+    PROVIDER_ADDRESS_LINES,
+    PROVIDER_CONTACT_NAME,
+    PROVIDER_NAME,
+)
 
 
 def _logo_uri(path: Path) -> str | None:

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <payroll xmlns="https://payroll.example.ca/schema/v1">
   <employer>
-    <name>Acme Personnel Inc.</name>
+    <name>Acme Productions Ltd.</name>
   </employer>
   <employee>
     <name>Jane Freelancer</name>

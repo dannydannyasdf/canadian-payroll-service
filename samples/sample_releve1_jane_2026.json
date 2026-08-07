@@ -12,14 +12,14 @@
     }
   },
   "employer": {
-    "name": "Acme Personnel Inc.",
-    "businessNumber": null,
-    "payrollAccountNumber": null,
+    "name": "Acme Productions Ltd.@Gamma Personnel Inc.",
+    "businessNumber": "106688385",
+    "payrollAccountNumber": "10668 8385 RP0001",
     "address": {
-      "line1": null,
-      "city": null,
-      "province": null,
-      "postalCode": null
+      "line1": "B301-2001 University, C.P. 71316",
+      "city": "Montréal",
+      "province": "QC",
+      "postalCode": "H3A 3S9"
     }
   },
   "boxes": {

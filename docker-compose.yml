@@ -24,6 +24,8 @@ services:
       DATABASE_URL: postgresql+psycopg://payroll:payroll@db:5432/payroll
       PAYROLL_CLIENT_LOGO_PATH: /app/Images/Anonymous_Logo.jpg
       PAYROLL_PROVIDER_LOGO_PATH: /app/Images/Gamma_heads_Logo_Black.jpg
+      PAYROLL_CRA_PAYROLL_ACCOUNT: "10668 8385 RP0001"
+      PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE: ON
       DEMO_API_KEY: gamma-dev-api-key
     depends_on:
       db:
@@ -73,6 +75,8 @@ services:
       DATABASE_URL: postgresql+psycopg://payroll:payroll@db:5432/payroll
       PAYROLL_CLIENT_LOGO_PATH: /app/Images/Anonymous_Logo.jpg
       PAYROLL_PROVIDER_LOGO_PATH: /app/Images/Gamma_heads_Logo_Black.jpg
+      PAYROLL_CRA_PAYROLL_ACCOUNT: "10668 8385 RP0001"
+      PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE: ON
       DEMO_API_KEY: gamma-dev-api-key
     depends_on:
       db:
