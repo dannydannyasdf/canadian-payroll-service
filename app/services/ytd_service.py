@@ -1,39 +1,10 @@
 from sqlalchemy.orm import Session
 
-from app.db_models import EmployeeRecord, EmployerRecord, PayPeriodRecord, YtdRecord
+from app.db_models import EmployeeRecord, PayPeriodRecord, YtdRecord
 from app.exceptions import DuplicatePayPeriodError
 from app.models.cumulative import CumulativeResponse, CumulativeTotals, LastPayPeriod
 from app.models.payroll import PayrollPayload
-
-
-def _get_or_create_employer(db: Session, name: str) -> EmployerRecord:
-    employer = db.query(EmployerRecord).filter_by(name=name).one_or_none()
-    if employer is None:
-        employer = EmployerRecord(name=name)
-        db.add(employer)
-        db.flush()
-    return employer
-
-
-def _get_or_create_employee(
-    db: Session,
-    employer: EmployerRecord,
-    name: str,
-    sin: str,
-) -> EmployeeRecord:
-    employee = (
-        db.query(EmployeeRecord)
-        .filter_by(employer_id=employer.id, sin=sin)
-        .one_or_none()
-    )
-    if employee is None:
-        employee = EmployeeRecord(employer_id=employer.id, name=name, sin=sin)
-        db.add(employee)
-        db.flush()
-    else:
-        employee.name = name
-    return employee
-
+from app.services.onboarding_service import resolve_employee_for_payroll, resolve_employer_for_payroll
 
 def _find_existing_pay_period(
     db: Session,
@@ -82,12 +53,17 @@ def accumulate_ytd(db: Session, payload: PayrollPayload) -> CumulativeResponse:
     """
     tax_year = payload.pay_period.pay_date.year
 
-    employer = _get_or_create_employer(db, payload.employer.name)
-    employee = _get_or_create_employee(
+    employer = resolve_employer_for_payroll(
+        db,
+        employer_id=payload.employer.id,
+        name=payload.employer.name,
+    )
+    employee = resolve_employee_for_payroll(
         db,
         employer,
-        payload.employee.name,
-        payload.employee.sin,
+        employee_id=payload.employee.id,
+        name=payload.employee.name,
+        sin=payload.employee.sin,
     )
 
     if _find_existing_pay_period(db, employee, payload) is not None:
@@ -129,7 +105,7 @@ def accumulate_ytd(db: Session, payload: PayrollPayload) -> CumulativeResponse:
     return CumulativeResponse(
         taxYear=tax_year,
         employeeId=employee.id,
-        employerName=payload.employer.name,
+        employerName=employer.name,
         employeeName=employee.name,
         employeeSin=employee.sin,
         totals=CumulativeTotals(

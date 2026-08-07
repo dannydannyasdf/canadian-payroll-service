@@ -20,6 +20,7 @@ from app.exceptions import (
     InactiveEmployerError,
     InactiveEmployeeError,
     OnboardingEmployeeNotFoundError,
+    PayrollIdentityMismatchError,
 )
 from app.models.onboarding import (
     EmployeeCreateRequest,
@@ -33,6 +34,7 @@ from app.models.onboarding import (
     PartyAddressResponse,
 )
 from app.services.provider_config import filing_employer_display_name
+from app.sin import normalize_sin
 
 
 def _address_response(
@@ -301,4 +303,88 @@ def ensure_employee_active(db: Session, employee_id: int) -> EmployeeRecord:
         raise OnboardingEmployeeNotFoundError(-1, employee_id)
     if employee.status == INACTIVE_STATUS:
         raise InactiveEmployeeError(employee_id)
+    return employee
+
+
+def resolve_employer_for_payroll(
+    db: Session,
+    *,
+    employer_id: int | None,
+    name: str | None,
+) -> EmployerRecord:
+    if employer_id is not None:
+        employer = db.query(EmployerRecord).filter_by(id=employer_id).one_or_none()
+        if employer is None:
+            raise EmployerNotFoundError(employer_id)
+        if employer.status == INACTIVE_STATUS:
+            raise InactiveEmployerError(employer_id)
+        if name is not None and name.strip() != employer.name:
+            raise PayrollIdentityMismatchError(
+                f"Employer name {name.strip()!r} does not match registered employer "
+                f"{employer.name!r} (id={employer_id})."
+            )
+        return employer
+
+    if name is None or not name.strip():
+        raise PayrollIdentityMismatchError("employer.name is required when employer.id is omitted.")
+
+    trimmed_name = name.strip()
+    employer = db.query(EmployerRecord).filter_by(name=trimmed_name).one_or_none()
+    if employer is None:
+        employer = EmployerRecord(name=trimmed_name, status=ACTIVE_STATUS)
+        db.add(employer)
+        db.flush()
+        return employer
+
+    if employer.status == INACTIVE_STATUS:
+        raise InactiveEmployerError(employer.id)
+    return employer
+
+
+def resolve_employee_for_payroll(
+    db: Session,
+    employer: EmployerRecord,
+    *,
+    employee_id: int | None,
+    name: str,
+    sin: str,
+) -> EmployeeRecord:
+    normalized_sin = normalize_sin(sin)
+
+    if employee_id is not None:
+        employee = db.query(EmployeeRecord).filter_by(id=employee_id).one_or_none()
+        if employee is None:
+            raise OnboardingEmployeeNotFoundError(employer.id, employee_id)
+        if employee.employer_id != employer.id:
+            raise PayrollIdentityMismatchError(
+                f"Employee {employee_id} does not belong to employer {employer.id}."
+            )
+        if employee.status == INACTIVE_STATUS:
+            raise InactiveEmployeeError(employee_id)
+        if employee.sin != normalized_sin:
+            raise PayrollIdentityMismatchError(
+                f"Employee SIN does not match registered employee {employee_id}."
+            )
+        employee.name = name.strip()
+        return employee
+
+    employee = (
+        db.query(EmployeeRecord)
+        .filter_by(employer_id=employer.id, sin=normalized_sin)
+        .one_or_none()
+    )
+    if employee is None:
+        employee = EmployeeRecord(
+            employer_id=employer.id,
+            name=name.strip(),
+            sin=normalized_sin,
+            status=ACTIVE_STATUS,
+        )
+        db.add(employee)
+        db.flush()
+        return employee
+
+    if employee.status == INACTIVE_STATUS:
+        raise InactiveEmployeeError(employee.id)
+    employee.name = name.strip()
     return employee

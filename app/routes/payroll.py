@@ -4,7 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.exceptions import DuplicatePayPeriodError
+from app.exceptions import (
+    DuplicatePayPeriodError,
+    EmployerNotFoundError,
+    InactiveEmployeeError,
+    InactiveEmployerError,
+    OnboardingEmployeeNotFoundError,
+    PayrollIdentityMismatchError,
+)
 from app.models.cumulative import PayStubResponse
 from app.models.employee import EmployeeSummary
 from app.models.payroll import PayrollPayload
@@ -42,6 +49,16 @@ def _pay_stub_response(payload: PayrollPayload, db: Session, request: Request) -
         cumulative = accumulate_ytd(db, payload)
     except DuplicatePayPeriodError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except InactiveEmployerError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except InactiveEmployeeError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except EmployerNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except OnboardingEmployeeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except PayrollIdentityMismatchError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     record_billing_event(
         db,
@@ -68,6 +85,9 @@ def generate_pay_stub(
     Accept a payroll JSON payload, update year-to-date totals, and return:
     - cumulative JSON (YTD totals for the tax year)
     - pay stub PDF (base64-encoded)
+
+    Optional employer.id and employee.id link to registered onboarding records.
+    Inactive employers/employees are rejected with 403.
 
     Requires API key header when accessed through Kong: `apikey: <your-key>`
     """

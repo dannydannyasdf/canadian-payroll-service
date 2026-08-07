@@ -64,3 +64,8 @@ class EmployerNameLockedError(Exception):
         super().__init__(
             f"Employer {employer_id} name cannot be changed after pay stubs have been submitted."
         )
+
+
+class PayrollIdentityMismatchError(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)

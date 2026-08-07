@@ -285,14 +285,25 @@
 
       <div class="card">
         <h2>Employer & employee</h2>
+        <label for="employer-select">Registered employer</label>
+        <select id="employer-select">
+          <option value="">— Loading employers… —</option>
+        </select>
+        <p class="field-hint">Pick a registered client, or leave blank and type a name below.</p>
+
         <label for="employer-name">Employer</label>
         <input id="employer-name" name="employerName" required>
+
+        <label for="employee-select">Registered employee</label>
+        <select id="employee-select" disabled>
+          <option value="">— Select an employer first —</option>
+        </select>
 
         <label for="employee-name">Employee</label>
         <input id="employee-name" name="employeeName" required>
 
         <label for="employee-sin">SIN</label>
-        <input id="employee-sin" name="employeeSin" pattern="\d{3}-\d{3}-\d{3}" required>
+        <input id="employee-sin" name="employeeSin" pattern="\d{3}[- ]?\d{3}[- ]?\d{3}" required>
       </div>
 
       <div class="card">
@@ -362,6 +373,8 @@
 
     const form = document.getElementById("payroll-form");
     const sampleSelect = document.getElementById("sample-select");
+    const employerSelect = document.getElementById("employer-select");
+    const employeeSelect = document.getElementById("employee-select");
     const message = document.getElementById("message");
     const submitBtn = document.getElementById("submit-btn");
     const downloadAllBtn = document.getElementById("download-all-btn");
@@ -382,6 +395,107 @@
     let pdfObjectUrl = null;
     let lastEmployeeId = null;
     let lastTaxYear = null;
+    let registeredEmployers = [];
+    let registeredEmployees = [];
+
+    async function loadEmployers() {
+      employerSelect.innerHTML = '<option value="">— Loading employers… —</option>';
+      try {
+        const response = await fetch("/payroll/employers?status=active", {
+          headers: { apikey: apiKey },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(typeof data.detail === "string" ? data.detail : "Could not load employers.");
+        }
+        registeredEmployers = data;
+        employerSelect.innerHTML = '<option value="">— Enter manually below —</option>';
+        for (const employer of registeredEmployers) {
+          const option = document.createElement("option");
+          option.value = String(employer.id);
+          option.textContent = employer.name;
+          employerSelect.appendChild(option);
+        }
+        syncEmployerSelectToName();
+      } catch (err) {
+        employerSelect.innerHTML = '<option value="">— Could not load employers —</option>';
+        showMessage(err.message, "error");
+      }
+    }
+
+    async function loadEmployeesForEmployer(employerId) {
+      employeeSelect.disabled = true;
+      employeeSelect.innerHTML = '<option value="">— Loading employees… —</option>';
+      registeredEmployees = [];
+      if (!employerId) {
+        employeeSelect.innerHTML = '<option value="">— Select an employer first —</option>';
+        return;
+      }
+      try {
+        const response = await fetch(`/payroll/employers/${employerId}/employees`, {
+          headers: { apikey: apiKey },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(typeof data.detail === "string" ? data.detail : "Could not load employees.");
+        }
+        registeredEmployees = data.filter((employee) => employee.status === "active");
+        employeeSelect.innerHTML = '<option value="">— Enter manually below —</option>';
+        for (const employee of registeredEmployees) {
+          const option = document.createElement("option");
+          option.value = String(employee.id);
+          option.textContent = `${employee.name} (${employee.sin})`;
+          employeeSelect.appendChild(option);
+        }
+        employeeSelect.disabled = false;
+        syncEmployeeSelectToFields();
+      } catch (err) {
+        employeeSelect.innerHTML = '<option value="">— Could not load employees —</option>';
+        showMessage(err.message, "error");
+      }
+    }
+
+    function syncEmployerSelectToName() {
+      const employerName = document.getElementById("employer-name").value.trim();
+      const match = registeredEmployers.find((employer) => employer.name === employerName);
+      employerSelect.value = match ? String(match.id) : "";
+      if (match) {
+        loadEmployeesForEmployer(match.id);
+      } else {
+        loadEmployeesForEmployer(null);
+      }
+    }
+
+    function syncEmployeeSelectToFields() {
+      const sin = document.getElementById("employee-sin").value.trim();
+      const match = registeredEmployees.find((employee) => employee.sin === sin);
+      employeeSelect.value = match ? String(match.id) : "";
+    }
+
+    function applyEmployerSelection() {
+      const selectedId = employerSelect.value;
+      if (!selectedId) {
+        loadEmployeesForEmployer(null);
+        return;
+      }
+      const employer = registeredEmployers.find((item) => String(item.id) === selectedId);
+      if (employer) {
+        document.getElementById("employer-name").value = employer.name;
+        loadEmployeesForEmployer(employer.id);
+      }
+    }
+
+    function applyEmployeeSelection() {
+      const selectedId = employeeSelect.value;
+      if (!selectedId) {
+        return;
+      }
+      const employee = registeredEmployees.find((item) => String(item.id) === selectedId);
+      if (employee) {
+        document.getElementById("employee-name").value = employee.name;
+        document.getElementById("employee-sin").value = employee.sin;
+      }
+    }
 
     function showMessage(text, type) {
       message.textContent = text;
@@ -419,10 +533,11 @@
       fieldEi.value = sample.deductions.ei;
       fieldIncomeTax.value = sample.deductions.incomeTax;
       recalcNetPay();
+      syncEmployerSelectToName();
     }
 
     function buildPayload() {
-      return {
+      const payload = {
         employer: { name: document.getElementById("employer-name").value.trim() },
         employee: {
           name: document.getElementById("employee-name").value.trim(),
@@ -441,6 +556,13 @@
         },
         netPay: fieldNet.value.trim(),
       };
+      if (employerSelect.value) {
+        payload.employer.id = Number.parseInt(employerSelect.value, 10);
+      }
+      if (employeeSelect.value) {
+        payload.employee.id = Number.parseInt(employeeSelect.value, 10);
+      }
+      return payload;
     }
 
     function taxYearFromForm() {
@@ -452,9 +574,14 @@
       if (lastEmployeeId) {
         return lastEmployeeId;
       }
+      if (employeeSelect.value) {
+        return Number.parseInt(employeeSelect.value, 10);
+      }
 
+      const employerId = employerSelect.value ? Number.parseInt(employerSelect.value, 10) : null;
       const sin = document.getElementById("employee-sin").value.trim();
-      const response = await fetch("/payroll/employees", {
+      const query = employerId ? `?employerId=${employerId}` : "";
+      const response = await fetch(`/payroll/employees${query}`, {
         headers: { apikey: apiKey },
       });
       const data = await response.json();
@@ -622,6 +749,19 @@
       clearMessage();
     });
 
+    employerSelect.addEventListener("change", () => {
+      applyEmployerSelection();
+      clearMessage();
+    });
+
+    employeeSelect.addEventListener("change", () => {
+      applyEmployeeSelection();
+      clearMessage();
+    });
+
+    document.getElementById("employer-name").addEventListener("change", syncEmployerSelectToName);
+    document.getElementById("employee-sin").addEventListener("change", syncEmployeeSelectToFields);
+
     ["input", "change", "blur"].forEach((eventName) => {
       form.addEventListener(eventName, (event) => {
         if (event.target instanceof HTMLInputElement && event.target.hasAttribute("data-recalc-net")) {
@@ -692,7 +832,12 @@
       }
     });
 
-    fillForm(samples.week1);
+    async function initDemo() {
+      await loadEmployers();
+      fillForm(samples.week1);
+    }
+
+    initDemo();
   </script>
 </body>
 </html>

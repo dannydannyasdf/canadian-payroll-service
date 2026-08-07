@@ -7,10 +7,16 @@ from app.sin import normalize_sin
 
 
 class Employer(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: int | None = None
     name: str
 
 
 class Employee(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: int | None = None
     name: str
     sin: str
 
