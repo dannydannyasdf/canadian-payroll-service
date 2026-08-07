@@ -5,6 +5,8 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
 
+from app.models.tax_slip import T4SlipPreview, TaxPartyAddress
+
 APP_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = APP_DIR.parent
 TEMPLATES_DIR = APP_DIR / "templates"
@@ -56,4 +58,44 @@ def render_pay_stub_pdf(payroll_data: dict) -> bytes:
 def render_pay_stub_archive_pdf(stubs: list[dict]) -> bytes:
     template = _template_env().get_template("pay_stub_archive.html")
     html = template.render(stubs=stubs, tax_year=stubs[-1]["tax_year"], **_brand_context())
+    return HTML(string=html, base_url=str(TEMPLATES_DIR)).write_pdf()
+
+
+T4_BOX_ORDER = ("14", "16", "18", "22", "24", "26")
+
+
+def _format_address_lines(address: TaxPartyAddress) -> list[str]:
+    lines: list[str] = []
+    if address.line1:
+        lines.append(address.line1)
+
+    city_parts = [part for part in (address.city, address.province, address.postalCode) if part]
+    if city_parts:
+        lines.append(", ".join(city_parts))
+
+    return lines or ["Not on file"]
+
+
+def _format_box_amount(amount: str) -> str:
+    return f"${Decimal(amount):,.2f}"
+
+
+def render_t4_pdf(slip: T4SlipPreview) -> bytes:
+    formatted_boxes = {box: _format_box_amount(amount) for box, amount in slip.boxes.items()}
+    template = _template_env().get_template("t4.html")
+    html = template.render(
+        tax_year=slip.taxYear,
+        employer_name=slip.employer.name,
+        employer_business_number=slip.employer.businessNumber,
+        employer_payroll_account=slip.employer.payrollAccountNumber,
+        employer_address_lines=_format_address_lines(slip.employer.address),
+        employee_name=slip.employee.name,
+        employee_sin=slip.employee.sin,
+        employee_address_lines=_format_address_lines(slip.employee.address),
+        box_order=T4_BOX_ORDER,
+        box_labels=slip.boxLabels,
+        formatted_boxes=formatted_boxes,
+        disclaimers=slip.disclaimers,
+        **_brand_context(),
+    )
     return HTML(string=html, base_url=str(TEMPLATES_DIR)).write_pdf()

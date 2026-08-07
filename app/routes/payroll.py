@@ -10,7 +10,7 @@ from app.models.employee import EmployeeSummary
 from app.models.payroll import PayrollPayload
 from app.models.tax_slip import Releve1SlipPreview, T4SlipPreview
 from app.services.billing_service import record_billing_event
-from app.services.pdf_generator import render_pay_stub_archive_pdf, render_pay_stub_pdf
+from app.services.pdf_generator import render_pay_stub_archive_pdf, render_pay_stub_pdf, render_t4_pdf
 from app.services.stub_archive_service import (
     EmployeeNotFoundError,
     StubArchiveNotFoundError,
@@ -121,17 +121,41 @@ def download_stub_archive(
     )
 
 
+@router.get("/employees/{employee_id}/t4/pdf")
+def download_t4_pdf(
+    employee_id: int,
+    tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    db: Session = Depends(get_db),
+) -> Response:
+    """
+    Download a T4 slip PDF mapped from stored YTD totals.
+
+    Preview layout only — not a CRA-official form. Requires API key through Kong.
+    """
+    try:
+        slip = build_t4_preview(db, employee_id, tax_year)
+    except EmployeeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except YtdNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    pdf_bytes = render_t4_pdf(slip)
+    filename = f"t4-{employee_id}-{tax_year}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
+
+
 @router.get("/employees/{employee_id}/t4", response_model=T4SlipPreview)
 def preview_t4_slip(
     employee_id: int,
     tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
     db: Session = Depends(get_db),
 ) -> T4SlipPreview:
-    """
-    Preview CRA T4 box values mapped from stored YTD totals.
-
-    Phase 6 prep — JSON only. PDF generation and CRA e-file XML come next.
-    """
+    """Preview CRA T4 box values mapped from stored YTD totals (JSON)."""
     try:
         return build_t4_preview(db, employee_id, tax_year)
     except EmployeeNotFoundError as exc:

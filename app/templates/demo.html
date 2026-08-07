@@ -337,6 +337,7 @@
 
       <button type="submit" id="submit-btn">Generate PDF</button>
       <button type="button" id="download-all-btn" class="secondary-action">Download All Periods</button>
+      <button type="button" id="download-t4-btn" class="secondary-action">Download T4 (preview)</button>
     </form>
 
     <div id="result" class="card" hidden>
@@ -346,6 +347,7 @@
         <a id="open-pdf" href="#" target="_blank" rel="noopener">Open PDF</a>
         <a id="download-pdf" href="#" download="pay-stub.pdf">Download PDF</a>
         <button type="button" id="download-all-result-btn" class="secondary-action">Download All Periods</button>
+        <button type="button" id="download-t4-result-btn" class="secondary-action">Download T4 (preview)</button>
       </div>
       <iframe id="pdf-frame" title="Pay stub preview"></iframe>
     </div>
@@ -364,6 +366,8 @@
     const submitBtn = document.getElementById("submit-btn");
     const downloadAllBtn = document.getElementById("download-all-btn");
     const downloadAllResultBtn = document.getElementById("download-all-result-btn");
+    const downloadT4Btn = document.getElementById("download-t4-btn");
+    const downloadT4ResultBtn = document.getElementById("download-t4-result-btn");
     const result = document.getElementById("result");
     const ytdSummary = document.getElementById("ytd-summary");
     const openPdf = document.getElementById("open-pdf");
@@ -510,6 +514,53 @@
       }
     }
 
+    async function downloadT4Preview(button) {
+      clearMessage();
+      const buttons = [downloadT4Btn, downloadT4ResultBtn];
+      const originalText = button.textContent;
+      buttons.forEach((btn) => {
+        btn.disabled = true;
+        btn.textContent = "Downloading…";
+      });
+
+      try {
+        const employeeId = await resolveEmployeeId();
+        const taxYear = lastTaxYear || taxYearFromForm();
+        const response = await fetch(
+          `/payroll/employees/${employeeId}/t4/pdf?taxYear=${taxYear}`,
+          { headers: { apikey: apiKey } },
+        );
+
+        if (!response.ok) {
+          let detail = "T4 download failed.";
+          try {
+            const data = await response.json();
+            detail = data.detail || detail;
+          } catch (_) {
+            detail = await response.text();
+          }
+          showMessage(detail, "error");
+          return;
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `t4-${employeeId}-${taxYear}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showMessage(`Downloaded T4 preview for ${taxYear}.`, "success");
+      } catch (err) {
+        showMessage(err.message, "error");
+      } finally {
+        buttons.forEach((btn) => {
+          btn.disabled = false;
+          btn.textContent = "Download T4 (preview)";
+        });
+      }
+    }
+
     function setPdfLinks(base64Pdf) {
       if (pdfObjectUrl) {
         URL.revokeObjectURL(pdfObjectUrl);
@@ -539,6 +590,8 @@
 
     downloadAllBtn.addEventListener("click", downloadAllPeriods);
     downloadAllResultBtn.addEventListener("click", downloadAllPeriods);
+    downloadT4Btn.addEventListener("click", () => downloadT4Preview(downloadT4Btn));
+    downloadT4ResultBtn.addEventListener("click", () => downloadT4Preview(downloadT4ResultBtn));
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
