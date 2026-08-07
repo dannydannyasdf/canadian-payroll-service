@@ -1,10 +1,9 @@
-import re
 from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-SIN_PATTERN = re.compile(r"^\d{3}-\d{3}-\d{3}$")
+from app.sin import normalize_sin
 
 
 class Employer(BaseModel):
@@ -18,9 +17,7 @@ class Employee(BaseModel):
     @field_validator("sin")
     @classmethod
     def validate_sin(cls, value: str) -> str:
-        if not SIN_PATTERN.match(value):
-            raise ValueError("SIN must match format 123-456-789")
-        return value
+        return normalize_sin(value)
 
 
 class PayPeriod(BaseModel):
