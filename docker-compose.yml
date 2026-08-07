@@ -26,6 +26,7 @@ services:
       PAYROLL_PROVIDER_LOGO_PATH: /app/Images/Gamma_heads_Logo_Black.jpg
       PAYROLL_CRA_PAYROLL_ACCOUNT: "10668 8385 RP0001"
       PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE: ON
+      PAYROLL_RQ_EMPLOYER_ID: "1234567890"
       DEMO_API_KEY: gamma-dev-api-key
     depends_on:
       db:
@@ -77,6 +78,7 @@ services:
       PAYROLL_PROVIDER_LOGO_PATH: /app/Images/Gamma_heads_Logo_Black.jpg
       PAYROLL_CRA_PAYROLL_ACCOUNT: "10668 8385 RP0001"
       PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE: ON
+      PAYROLL_RQ_EMPLOYER_ID: "1234567890"
       DEMO_API_KEY: gamma-dev-api-key
     depends_on:
       db:

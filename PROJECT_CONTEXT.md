@@ -34,7 +34,7 @@
 | 6.1 | T4 PDF (official CRA form overlay when available) |
 | 6.2 | Relevé 1 PDF |
 | 6.3 | CRA T4 e-file XML (official XSD when present, else preview schema) |
-| 6.4 | Revenu Québec Relevé 1 e-file XML — **next slice** (mirror CRA pattern; QC employment province only) |
+| 6.4 | Revenu Québec Relevé 1 e-file XML (preview schema; QC employment province only) |
 
 **Onboarding (implemented, separate from Phase 6 numbering):**
 - Slices 1–2: Employer/employee registration API
@@ -120,9 +120,11 @@ canadian-payroll-service/
 | `POST /payroll/pay-stub/xml` | XML payroll → same response shape |
 | `GET /payroll/employees/{id}/stubs?taxYear=` | All pay periods → one PDF |
 | `GET /payroll/employees/{id}/t4[|/pdf|/xml]?taxYear=` | T4 JSON / PDF / CRA XML |
-| `GET /payroll/employees/{id}/releve1[|/pdf]?taxYear=` | Relevé 1 JSON / PDF |
+| `GET /payroll/employees/{id}/releve1[|/pdf|/xml]?taxYear=` | Relevé 1 JSON / PDF / RQ XML |
 | `GET /payroll/tax-filing/cra?taxYear=` | Bulk CRA T4 e-file |
 | `GET /payroll/tax-filing/cra/schema-status` | CRA XSD inventory |
+| `GET /payroll/tax-filing/rq?taxYear=` | Bulk Relevé 1 e-file (QC employees only) |
+| `GET /payroll/tax-filing/rq/schema-status` | RQ XSD inventory |
 | `POST/GET/PATCH /payroll/employers[/{id}]` | Client employer onboarding |
 | `POST/GET/PATCH /payroll/employers/{id}/employees[/{employee_id}]` | Employee onboarding |
 | `GET /payroll/employees?employerId=` | List employees (optional filter) |

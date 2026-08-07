@@ -31,6 +31,13 @@ from app.services.cra_efile_service import (
     build_employee_t4_efile_xml,
     cra_schema_inventory,
 )
+from app.services.rq_efile_service import (
+    RqFilingNotApplicableError,
+    RqFilingNotFoundError,
+    build_employee_releve1_efile_xml,
+    build_rq_filing_xml,
+    rq_schema_inventory,
+)
 from app.services.xml_validator import validate_payroll_xml
 from app.services.ytd_service import accumulate_ytd
 
@@ -246,6 +253,59 @@ def preview_t4_slip(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except YtdNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/employees/{employee_id}/releve1/xml")
+def download_releve1_efile_xml(
+    employee_id: int,
+    tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Download a Revenu Québec Relevé 1 e-file XML bundle for one employee (Quebec only)."""
+    try:
+        xml_text = build_employee_releve1_efile_xml(db, employee_id, tax_year)
+    except EmployeeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except YtdNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except RqFilingNotApplicableError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    filename = f"rq-releve1-{employee_id}-{tax_year}-preview.xml"
+    return Response(
+        content=xml_text,
+        media_type="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/tax-filing/rq/schema-status")
+def rq_schema_status() -> dict[str, object]:
+    """Show which Revenu Québec XSD files are present and which schema validates exports today."""
+    return rq_schema_inventory()
+
+
+@router.get("/tax-filing/rq")
+def download_rq_filing_xml(
+    tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Download a Revenu Québec Relevé 1 e-file XML bundle for all QC employees in a tax year."""
+    try:
+        xml_text = build_rq_filing_xml(db, tax_year)
+    except RqFilingNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    filename = f"rq-releve1-filing-{tax_year}-preview.xml"
+    return Response(
+        content=xml_text,
+        media_type="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/employees/{employee_id}/releve1/pdf")

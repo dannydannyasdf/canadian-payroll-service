@@ -351,6 +351,7 @@
       <button type="button" id="download-t4-btn" class="secondary-action">Download T4 (preview)</button>
       <button type="button" id="download-releve1-btn" class="secondary-action">Download Relevé 1 (preview)</button>
       <button type="button" id="download-cra-xml-btn" class="secondary-action">Download CRA XML (preview)</button>
+      <button type="button" id="download-rq-xml-btn" class="secondary-action">Download RQ XML (preview)</button>
     </form>
 
     <div id="result" class="card" hidden>
@@ -381,6 +382,7 @@
     const downloadT4Btn = document.getElementById("download-t4-btn");
     const downloadReleve1Btn = document.getElementById("download-releve1-btn");
     const downloadCraXmlBtn = document.getElementById("download-cra-xml-btn");
+    const downloadRqXmlBtn = document.getElementById("download-rq-xml-btn");
     const result = document.getElementById("result");
     const ytdSummary = document.getElementById("ytd-summary");
     const openPdf = document.getElementById("open-pdf");
@@ -685,9 +687,9 @@
       }
     }
 
-    async function downloadCraFilingXml(button) {
+    async function downloadFilingXml(button, { path, label, filePrefix, idleText }) {
       clearMessage();
-      const buttons = [downloadCraXmlBtn];
+      const buttons = [button];
       buttons.forEach((btn) => {
         btn.disabled = true;
         btn.textContent = "Downloading…";
@@ -696,12 +698,12 @@
       try {
         const taxYear = lastTaxYear || taxYearFromForm();
         const response = await fetch(
-          `/payroll/tax-filing/cra?taxYear=${taxYear}`,
+          `/payroll/tax-filing/${path}?taxYear=${taxYear}`,
           { headers: { apikey: apiKey } },
         );
 
         if (!response.ok) {
-          let detail = "CRA XML download failed.";
+          let detail = `${label} download failed.`;
           try {
             const data = await response.json();
             detail = data.detail || detail;
@@ -716,16 +718,16 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `cra-t4-filing-${taxYear}.xml`;
+        link.download = `${filePrefix}-${taxYear}.xml`;
         link.click();
         URL.revokeObjectURL(url);
-        showMessage(`Downloaded CRA XML preview for ${taxYear}.`, "success");
+        showMessage(`Downloaded ${label} preview for ${taxYear}.`, "success");
       } catch (err) {
         showMessage(err.message, "error");
       } finally {
         buttons.forEach((btn) => {
           btn.disabled = false;
-          btn.textContent = "Download CRA XML (preview)";
+          btn.textContent = idleText;
         });
       }
     }
@@ -785,7 +787,18 @@
       buttons: [downloadReleve1Btn],
       idleText: "Download Relevé 1 (preview)",
     }));
-    downloadCraXmlBtn.addEventListener("click", () => downloadCraFilingXml(downloadCraXmlBtn));
+    downloadCraXmlBtn.addEventListener("click", () => downloadFilingXml(downloadCraXmlBtn, {
+      path: "cra",
+      label: "CRA XML",
+      filePrefix: "cra-t4-filing",
+      idleText: "Download CRA XML (preview)",
+    }));
+    downloadRqXmlBtn.addEventListener("click", () => downloadFilingXml(downloadRqXmlBtn, {
+      path: "rq",
+      label: "RQ XML",
+      filePrefix: "rq-releve1-filing",
+      idleText: "Download RQ XML (preview)",
+    }));
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();

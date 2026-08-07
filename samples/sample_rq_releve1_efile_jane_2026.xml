@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Submission xmlns="https://payroll.example.ca/schema/rq-efile-preview/v1" taxYear="2026" status="preview">
+  <Transmitter>
+    <name>Gamma Personnel Inc.</name>
+    <contactName>Danny Majerovich</contactName>
+    <rqEmployerId>1234567890</rqEmployerId>
+  </Transmitter>
+  <Releve1Return>
+    <Releve1Summary>
+      <employerName>Acme Productions Ltd.@Gamma Personnel Inc.</employerName>
+      <rqEmployerId>1234567890</rqEmployerId>
+      <totBoxA>10000.00</totBoxA>
+      <totBoxB>576.00</totBoxB>
+      <totBoxC>164.00</totBoxC>
+      <totBoxE>2200.00</totBoxE>
+      <totBoxG>10000.00</totBoxG>
+      <totBoxI>10000.00</totBoxI>
+      <slipCount>1</slipCount>
+    </Releve1Summary>
+    <Releve1Slip>
+      <employeeName>
+        <surname>Freelancer</surname>
+        <givenName>Jane</givenName>
+      </employeeName>
+      <sin>130692544</sin>
+      <reportTypeCode>O</reportTypeCode>
+      <amounts>
+        <boxA>10000.00</boxA>
+        <boxB>576.00</boxB>
+        <boxC>164.00</boxC>
+        <boxE>2200.00</boxE>
+        <boxG>10000.00</boxG>
+        <boxI>10000.00</boxI>
+      </amounts>
+    </Releve1Slip>
+  </Releve1Return>
+</Submission>
