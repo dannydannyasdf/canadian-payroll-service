@@ -24,6 +24,12 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+
     from app import db_models  # noqa: F401
 
-    Base.metadata.create_all(bind=engine)
+    alembic_cfg = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    command.upgrade(alembic_cfg, "head")

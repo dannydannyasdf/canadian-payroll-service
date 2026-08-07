@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -12,6 +12,12 @@ class EmployerRecord(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    business_number: Mapped[str | None] = mapped_column(String(15), nullable=True)
+    payroll_account_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    address_line1: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    province: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    postal_code: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
     employees: Mapped[list["EmployeeRecord"]] = relationship(back_populates="employer")
 
@@ -24,6 +30,10 @@ class EmployeeRecord(Base):
     employer_id: Mapped[int] = mapped_column(ForeignKey("employers.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     sin: Mapped[str] = mapped_column(String(11), nullable=False)
+    address_line1: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    province: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    postal_code: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
     employer: Mapped["EmployerRecord"] = relationship(back_populates="employees")
     ytd_records: Mapped[list["YtdRecord"]] = relationship(back_populates="employee")
@@ -54,7 +64,7 @@ class PayPeriodRecord(Base):
     net_pay: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
+        server_default=text("(CURRENT_TIMESTAMP)"),
         nullable=False,
     )
 
@@ -78,7 +88,7 @@ class YtdRecord(Base):
     last_pay_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
+        server_default=text("(CURRENT_TIMESTAMP)"),
         onupdate=func.now(),
         nullable=False,
     )
@@ -97,6 +107,6 @@ class BillingEvent(Base):
     billing_fee: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
+        server_default=text("(CURRENT_TIMESTAMP)"),
         nullable=False,
     )

@@ -8,6 +8,7 @@ from app.exceptions import DuplicatePayPeriodError
 from app.models.cumulative import PayStubResponse
 from app.models.employee import EmployeeSummary
 from app.models.payroll import PayrollPayload
+from app.models.tax_slip import Releve1SlipPreview, T4SlipPreview
 from app.services.billing_service import record_billing_event
 from app.services.pdf_generator import render_pay_stub_archive_pdf, render_pay_stub_pdf
 from app.services.stub_archive_service import (
@@ -16,6 +17,7 @@ from app.services.stub_archive_service import (
     build_stub_archive,
     list_employees,
 )
+from app.services.tax_slip_service import YtdNotFoundError, build_releve1_preview, build_t4_preview
 from app.services.xml_validator import validate_payroll_xml
 from app.services.ytd_service import accumulate_ytd
 
@@ -117,3 +119,41 @@ def download_stub_archive(
         media_type="application/pdf",
         headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )
+
+
+@router.get("/employees/{employee_id}/t4", response_model=T4SlipPreview)
+def preview_t4_slip(
+    employee_id: int,
+    tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    db: Session = Depends(get_db),
+) -> T4SlipPreview:
+    """
+    Preview CRA T4 box values mapped from stored YTD totals.
+
+    Phase 6 prep — JSON only. PDF generation and CRA e-file XML come next.
+    """
+    try:
+        return build_t4_preview(db, employee_id, tax_year)
+    except EmployeeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except YtdNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/employees/{employee_id}/releve1", response_model=Releve1SlipPreview)
+def preview_releve1_slip(
+    employee_id: int,
+    tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    db: Session = Depends(get_db),
+) -> Releve1SlipPreview:
+    """
+    Preview Revenu Québec Relevé 1 box values mapped from stored YTD totals.
+
+    Phase 6 prep — JSON only. PDF generation and RQ e-file XML come next.
+    """
+    try:
+        return build_releve1_preview(db, employee_id, tax_year)
+    except EmployeeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except YtdNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

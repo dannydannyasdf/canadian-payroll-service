@@ -1,0 +1,48 @@
+{
+  "taxYear": 2026,
+  "employee": {
+    "id": 1,
+    "name": "Jane Freelancer",
+    "sin": "123-456-789",
+    "address": {
+      "line1": null,
+      "city": null,
+      "province": null,
+      "postalCode": null
+    }
+  },
+  "employer": {
+    "name": "Acme Personnel Inc.",
+    "businessNumber": null,
+    "payrollAccountNumber": null,
+    "address": {
+      "line1": null,
+      "city": null,
+      "province": null,
+      "postalCode": null
+    }
+  },
+  "boxes": {
+    "14": "10000.00",
+    "16": "576.00",
+    "18": "164.00",
+    "22": "2200.00",
+    "24": "10000.00",
+    "26": "10000.00"
+  },
+  "boxLabels": {
+    "14": "Employment income",
+    "16": "Employee's CPP contributions",
+    "18": "Employee's EI premiums",
+    "22": "Income tax deducted",
+    "24": "EI insurable earnings",
+    "26": "CPP/QPP pensionable earnings"
+  },
+  "disclaimers": [
+    "Preview mapping only — not a filing-ready T4.",
+    "Boxes 24/26 assume all gross pay is pensionable and insurable.",
+    "Quebec employers must map CPP to QPP on Relevé 1, not T4 box 16.",
+    "Income tax is not split into federal vs provincial amounts yet."
+  ],
+  "status": "preview"
+}
