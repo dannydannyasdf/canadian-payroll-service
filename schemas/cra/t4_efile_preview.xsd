@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://payroll.example.ca/schema/cra-efile-preview/v1"
+           xmlns="https://payroll.example.ca/schema/cra-efile-preview/v1"
+           elementFormDefault="qualified">
+
+  <xs:element name="Submission">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="T619" type="T619Type"/>
+        <xs:element name="T4Return" type="T4ReturnType"/>
+      </xs:sequence>
+      <xs:attribute name="taxYear" type="xs:gYear" use="required"/>
+      <xs:attribute name="status" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="T619Type">
+    <xs:sequence>
+      <xs:element name="transmitterName" type="xs:string"/>
+      <xs:element name="contactName" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="T4ReturnType">
+    <xs:sequence>
+      <xs:element name="T4Summary" type="T4SummaryType"/>
+      <xs:element name="T4Slip" type="T4SlipType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="T4SummaryType">
+    <xs:sequence>
+      <xs:element name="payrollAccountNumber" type="PayrollAccountType"/>
+      <xs:element name="totEmptIncamt" type="MoneyType"/>
+      <xs:element name="totCppCntrbAmt" type="MoneyType" minOccurs="0"/>
+      <xs:element name="totQppCntrbAmt" type="MoneyType" minOccurs="0"/>
+      <xs:element name="totEmpeEipAmt" type="MoneyType"/>
+      <xs:element name="totItxDdctAmt" type="MoneyType"/>
+      <xs:element name="totEiInsuErnAmt" type="MoneyType"/>
+      <xs:element name="totCppQppErnAmt" type="MoneyType"/>
+      <xs:element name="slipCount" type="xs:positiveInteger"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="T4SlipType">
+    <xs:sequence>
+      <xs:element name="employeeName" type="EmployeeNameType"/>
+      <xs:element name="sin" type="SinType"/>
+      <xs:element name="payrollAccountNumber" type="PayrollAccountType"/>
+      <xs:element name="reportTypeCode" type="ReportTypeCodeType"/>
+      <xs:element name="employmentProvinceCode" type="ProvinceCodeType"/>
+      <xs:element name="amounts" type="T4AmountsType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EmployeeNameType">
+    <xs:sequence>
+      <xs:element name="surname" type="xs:string"/>
+      <xs:element name="givenName" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="T4AmountsType">
+    <xs:sequence>
+      <xs:element name="emptIncamt" type="MoneyType"/>
+      <xs:element name="cppCntrbAmt" type="MoneyType" minOccurs="0"/>
+      <xs:element name="qppCntrbAmt" type="MoneyType" minOccurs="0"/>
+      <xs:element name="empeEipAmt" type="MoneyType"/>
+      <xs:element name="itxDdctAmt" type="MoneyType"/>
+      <xs:element name="eiInsuErnAmt" type="MoneyType"/>
+      <xs:element name="cppQppErnAmt" type="MoneyType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="MoneyType">
+    <xs:restriction base="xs:decimal">
+      <xs:fractionDigits value="2"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SinType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9]{9}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="PayrollAccountType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+      <xs:maxLength value="15"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ReportTypeCodeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="O"/>
+      <xs:enumeration value="A"/>
+      <xs:enumeration value="C"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ProvinceCodeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="AB"/>
+      <xs:enumeration value="BC"/>
+      <xs:enumeration value="MB"/>
+      <xs:enumeration value="NB"/>
+      <xs:enumeration value="NL"/>
+      <xs:enumeration value="NS"/>
+      <xs:enumeration value="NT"/>
+      <xs:enumeration value="NU"/>
+      <xs:enumeration value="ON"/>
+      <xs:enumeration value="PE"/>
+      <xs:enumeration value="QC"/>
+      <xs:enumeration value="SK"/>
+      <xs:enumeration value="YT"/>
+      <xs:enumeration value="US"/>
+      <xs:enumeration value="ZZ"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

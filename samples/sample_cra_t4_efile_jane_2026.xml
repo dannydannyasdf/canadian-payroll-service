@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Submission xmlns="https://payroll.example.ca/schema/cra-efile-preview/v1" taxYear="2026" status="preview">
+  <T619>
+    <transmitterName>Gamma Personnel Inc.</transmitterName>
+    <contactName>Danny Majerovich</contactName>
+  </T619>
+  <T4Return>
+    <T4Summary>
+      <payrollAccountNumber>000000000RP0000</payrollAccountNumber>
+      <totEmptIncamt>10000.00</totEmptIncamt>
+      <totQppCntrbAmt>576.00</totQppCntrbAmt>
+      <totEmpeEipAmt>164.00</totEmpeEipAmt>
+      <totItxDdctAmt>2200.00</totItxDdctAmt>
+      <totEiInsuErnAmt>10000.00</totEiInsuErnAmt>
+      <totCppQppErnAmt>10000.00</totCppQppErnAmt>
+      <slipCount>1</slipCount>
+    </T4Summary>
+    <T4Slip>
+      <employeeName>
+        <surname>Freelancer</surname>
+        <givenName>Jane</givenName>
+      </employeeName>
+      <sin>123456789</sin>
+      <payrollAccountNumber>000000000RP0000</payrollAccountNumber>
+      <reportTypeCode>O</reportTypeCode>
+      <employmentProvinceCode>QC</employmentProvinceCode>
+      <amounts>
+        <emptIncamt>10000.00</emptIncamt>
+        <qppCntrbAmt>576.00</qppCntrbAmt>
+        <empeEipAmt>164.00</empeEipAmt>
+        <itxDdctAmt>2200.00</itxDdctAmt>
+        <eiInsuErnAmt>10000.00</eiInsuErnAmt>
+        <cppQppErnAmt>10000.00</cppQppErnAmt>
+      </amounts>
+    </T4Slip>
+  </T4Return>
+</Submission>

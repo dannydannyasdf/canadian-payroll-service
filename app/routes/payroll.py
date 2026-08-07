@@ -18,6 +18,12 @@ from app.services.stub_archive_service import (
     list_employees,
 )
 from app.services.tax_slip_service import YtdNotFoundError, build_releve1_preview, build_t4_preview
+from app.services.cra_efile_service import (
+    CraFilingNotFoundError,
+    build_cra_filing_xml,
+    build_employee_t4_efile_xml,
+    cra_schema_inventory,
+)
 from app.services.xml_validator import validate_payroll_xml
 from app.services.ytd_service import accumulate_ytd
 
@@ -118,6 +124,57 @@ def download_stub_archive(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
+
+
+@router.get("/employees/{employee_id}/t4/xml")
+def download_t4_efile_xml(
+    employee_id: int,
+    tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Download a CRA T4 e-file preview XML bundle for one employee."""
+    try:
+        xml_text = build_employee_t4_efile_xml(db, employee_id, tax_year)
+    except EmployeeNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except YtdNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    filename = f"cra-t4-{employee_id}-{tax_year}.xml"
+    return Response(
+        content=xml_text,
+        media_type="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/tax-filing/cra/schema-status")
+def cra_schema_status() -> dict[str, object]:
+    """Show which CRA XSD files are present and which schema validates exports today."""
+    return cra_schema_inventory()
+
+
+@router.get("/tax-filing/cra")
+def download_cra_filing_xml(
+    tax_year: int = Query(alias="taxYear", ge=2000, le=2100),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Download a CRA T4 e-file preview XML bundle for all employees in a tax year."""
+    try:
+        xml_text = build_cra_filing_xml(db, tax_year)
+    except CraFilingNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    filename = f"cra-t4-filing-{tax_year}.xml"
+    return Response(
+        content=xml_text,
+        media_type="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
