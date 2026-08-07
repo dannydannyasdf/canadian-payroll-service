@@ -198,6 +198,7 @@ def _build_official_t4_slip(slip: T4SlipPreview) -> etree._Element:
     _append_text(slip_el, "bn", payroll_account)
     _append_text(slip_el, "cpp_qpp_xmpt_cd", 0)
     _append_text(slip_el, "ei_xmpt_cd", 0)
+    # TODO: support Amended (A) and Cancel (C) via rpt_tcd — see slipDataType in simple.xsd
     _append_text(slip_el, "rpt_tcd", "O")
     _append_text(slip_el, "empt_prov_cd", province)
     _append_text(slip_el, "empr_dntl_ben_rpt_cd", os.environ.get("PAYROLL_CRA_DENTAL_CODE", "1"))

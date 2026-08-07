@@ -37,3 +37,16 @@ payroll.db
 # Binary assets (logos; not useful for code indexing)
 Images/
 app/assets/
+
+# CRA XSD package (~1.2M) — keep T4 filing subset only; rest stays on disk for validation
+# T4 Amended (A) and Cancel (C) are defined here (no separate XSDs):
+#   simple.xsd (slipDataType), t4.xsd (rpt_tcd), t4_efile_preview.xsd (reportTypeCode)
+# TODO: wire A/C report types in cra_efile_service (currently hardcoded to O)
+schemas/cra/**
+!schemas/cra/T619_T4.xsd
+!schemas/cra/t4.xsd
+!schemas/cra/t4_efile_preview.xsd
+!schemas/cra/simple.xsd
+!schemas/cra/complex.xsd
+!schemas/cra/standarddatatypes.xsd
+!schemas/cra/cracommonstructures.xsd

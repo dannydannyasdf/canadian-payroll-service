@@ -348,10 +348,6 @@
       <div class="actions">
         <a id="open-pdf" href="#" target="_blank" rel="noopener">Open PDF</a>
         <a id="download-pdf" href="#" download="pay-stub.pdf">Download PDF</a>
-        <button type="button" id="download-all-result-btn" class="secondary-action">Download All Periods</button>
-        <button type="button" id="download-t4-result-btn" class="secondary-action">Download T4 (preview)</button>
-        <button type="button" id="download-releve1-result-btn" class="secondary-action">Download Relevé 1 (preview)</button>
-        <button type="button" id="download-cra-xml-result-btn" class="secondary-action">Download CRA XML (preview)</button>
       </div>
       <iframe id="pdf-frame" title="Pay stub preview"></iframe>
     </div>
@@ -369,13 +365,9 @@
     const message = document.getElementById("message");
     const submitBtn = document.getElementById("submit-btn");
     const downloadAllBtn = document.getElementById("download-all-btn");
-    const downloadAllResultBtn = document.getElementById("download-all-result-btn");
     const downloadT4Btn = document.getElementById("download-t4-btn");
-    const downloadT4ResultBtn = document.getElementById("download-t4-result-btn");
     const downloadReleve1Btn = document.getElementById("download-releve1-btn");
-    const downloadReleve1ResultBtn = document.getElementById("download-releve1-result-btn");
     const downloadCraXmlBtn = document.getElementById("download-cra-xml-btn");
-    const downloadCraXmlResultBtn = document.getElementById("download-cra-xml-result-btn");
     const result = document.getElementById("result");
     const ytdSummary = document.getElementById("ytd-summary");
     const openPdf = document.getElementById("open-pdf");
@@ -482,7 +474,6 @@
     async function downloadAllPeriods() {
       clearMessage();
       downloadAllBtn.disabled = true;
-      downloadAllResultBtn.disabled = true;
       downloadAllBtn.textContent = "Downloading…";
 
       try {
@@ -517,7 +508,6 @@
         showMessage(err.message, "error");
       } finally {
         downloadAllBtn.disabled = false;
-        downloadAllResultBtn.disabled = false;
         downloadAllBtn.textContent = "Download All Periods";
       }
     }
@@ -570,7 +560,7 @@
 
     async function downloadCraFilingXml(button) {
       clearMessage();
-      const buttons = [downloadCraXmlBtn, downloadCraXmlResultBtn];
+      const buttons = [downloadCraXmlBtn];
       buttons.forEach((btn) => {
         btn.disabled = true;
         btn.textContent = "Downloading…";
@@ -641,37 +631,21 @@
     });
 
     downloadAllBtn.addEventListener("click", downloadAllPeriods);
-    downloadAllResultBtn.addEventListener("click", downloadAllPeriods);
     downloadT4Btn.addEventListener("click", () => downloadTaxSlipPdf(downloadT4Btn, {
       path: "t4/pdf",
       label: "T4",
       filePrefix: "t4",
-      buttons: [downloadT4Btn, downloadT4ResultBtn],
-      idleText: "Download T4 (preview)",
-    }));
-    downloadT4ResultBtn.addEventListener("click", () => downloadTaxSlipPdf(downloadT4ResultBtn, {
-      path: "t4/pdf",
-      label: "T4",
-      filePrefix: "t4",
-      buttons: [downloadT4Btn, downloadT4ResultBtn],
+      buttons: [downloadT4Btn],
       idleText: "Download T4 (preview)",
     }));
     downloadReleve1Btn.addEventListener("click", () => downloadTaxSlipPdf(downloadReleve1Btn, {
       path: "releve1/pdf",
       label: "Relevé 1",
       filePrefix: "releve1",
-      buttons: [downloadReleve1Btn, downloadReleve1ResultBtn],
-      idleText: "Download Relevé 1 (preview)",
-    }));
-    downloadReleve1ResultBtn.addEventListener("click", () => downloadTaxSlipPdf(downloadReleve1ResultBtn, {
-      path: "releve1/pdf",
-      label: "Relevé 1",
-      filePrefix: "releve1",
-      buttons: [downloadReleve1Btn, downloadReleve1ResultBtn],
+      buttons: [downloadReleve1Btn],
       idleText: "Download Relevé 1 (preview)",
     }));
     downloadCraXmlBtn.addEventListener("click", () => downloadCraFilingXml(downloadCraXmlBtn));
-    downloadCraXmlResultBtn.addEventListener("click", () => downloadCraFilingXml(downloadCraXmlResultBtn));
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
