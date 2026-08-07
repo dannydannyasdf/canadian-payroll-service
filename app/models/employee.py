@@ -9,4 +9,5 @@ class EmployeeSummary(BaseModel):
     id: int
     name: str
     sin: str
+    employer_id: int = Field(alias="employerId")
     employer_name: str = Field(alias="employerName")

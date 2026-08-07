@@ -94,9 +94,12 @@ async def generate_pay_stub_xml(request: Request, db: Session = Depends(get_db))
 
 
 @router.get("/employees", response_model=list[EmployeeSummary])
-def get_employees(db: Session = Depends(get_db)) -> list[EmployeeSummary]:
-    """List employees (use the id to download a stub archive)."""
-    return [EmployeeSummary(**row) for row in list_employees(db)]
+def get_employees(
+    employer_id: int | None = Query(default=None, alias="employerId"),
+    db: Session = Depends(get_db),
+) -> list[EmployeeSummary]:
+    """List employees (optionally filter by employer id)."""
+    return [EmployeeSummary(**row) for row in list_employees(db, employer_id=employer_id)]
 
 
 @router.get("/employees/{employee_id}/stubs")

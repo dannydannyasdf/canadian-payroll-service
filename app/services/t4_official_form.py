@@ -65,7 +65,11 @@ def _payroll_account(slip: T4SlipPreview) -> str:
 
 
 def _employment_province(slip: T4SlipPreview) -> str:
-    province = slip.employee.address.province or DEFAULT_EMPLOYMENT_PROVINCE
+    province = (
+        slip.employee.employmentProvince
+        or slip.employee.address.province
+        or DEFAULT_EMPLOYMENT_PROVINCE
+    )
     return province.upper()
 
 

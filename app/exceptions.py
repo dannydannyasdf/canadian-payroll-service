@@ -18,3 +18,49 @@ class DuplicatePayPeriodError(Exception):
             f"Pay period {period_start} to {period_end} was already submitted "
             f"for employee SIN {employee_sin}. Duplicate submissions would inflate YTD totals."
         )
+
+
+class DuplicateEmployerError(Exception):
+    def __init__(self, name: str) -> None:
+        self.name = name
+        super().__init__(f"Employer {name!r} already exists.")
+
+
+class DuplicateEmployeeError(Exception):
+    def __init__(self, sin: str, employer_id: int) -> None:
+        self.sin = sin
+        self.employer_id = employer_id
+        super().__init__(f"Employee with SIN {sin} already exists for employer {employer_id}.")
+
+
+class EmployerNotFoundError(Exception):
+    def __init__(self, employer_id: int) -> None:
+        self.employer_id = employer_id
+        super().__init__(f"Employer {employer_id} not found.")
+
+
+class OnboardingEmployeeNotFoundError(Exception):
+    def __init__(self, employer_id: int, employee_id: int) -> None:
+        self.employer_id = employer_id
+        self.employee_id = employee_id
+        super().__init__(f"Employee {employee_id} not found for employer {employer_id}.")
+
+
+class InactiveEmployerError(Exception):
+    def __init__(self, employer_id: int) -> None:
+        self.employer_id = employer_id
+        super().__init__(f"Employer {employer_id} is inactive.")
+
+
+class InactiveEmployeeError(Exception):
+    def __init__(self, employee_id: int) -> None:
+        self.employee_id = employee_id
+        super().__init__(f"Employee {employee_id} is inactive.")
+
+
+class EmployerNameLockedError(Exception):
+    def __init__(self, employer_id: int) -> None:
+        self.employer_id = employer_id
+        super().__init__(
+            f"Employer {employer_id} name cannot be changed after pay stubs have been submitted."
+        )

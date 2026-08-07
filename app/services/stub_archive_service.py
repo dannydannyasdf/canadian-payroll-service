@@ -18,18 +18,17 @@ class StubArchiveNotFoundError(Exception):
         super().__init__(f"No pay stubs found for employee {employee_id} in tax year {tax_year}.")
 
 
-def list_employees(db: Session) -> list[dict]:
-    employees = (
-        db.query(EmployeeRecord)
-        .options(joinedload(EmployeeRecord.employer))
-        .order_by(EmployeeRecord.name)
-        .all()
-    )
+def list_employees(db: Session, employer_id: int | None = None) -> list[dict]:
+    query = db.query(EmployeeRecord).options(joinedload(EmployeeRecord.employer)).order_by(EmployeeRecord.name)
+    if employer_id is not None:
+        query = query.filter(EmployeeRecord.employer_id == employer_id)
+    employees = query.all()
     return [
         {
             "id": employee.id,
             "name": employee.name,
             "sin": employee.sin,
+            "employerId": employee.employer_id,
             "employerName": employee.employer.name,
         }
         for employee in employees

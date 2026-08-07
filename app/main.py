@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.database import init_db
-from app.routes import demo, payroll
+from app.routes import demo, onboarding, payroll
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,6 +27,7 @@ app = FastAPI(
 )
 
 app.include_router(demo.router, tags=["demo"])
+app.include_router(onboarding.router, prefix="/payroll", tags=["onboarding"])
 app.include_router(payroll.router, prefix="/payroll", tags=["payroll"])
 app.mount("/images", StaticFiles(directory=PROJECT_DIR / "Images"), name="images")
 

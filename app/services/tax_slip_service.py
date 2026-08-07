@@ -71,6 +71,7 @@ def build_t4_preview(db: Session, employee_id: int, tax_year: int) -> T4SlipPrev
             id=employee.id,
             name=employee.name,
             sin=employee.sin,
+            employmentProvince=employee.employment_province,
             address=_party_address(
                 employee.address_line1,
                 employee.city,
@@ -95,6 +96,7 @@ def build_releve1_preview(db: Session, employee_id: int, tax_year: int) -> Relev
             id=employee.id,
             name=employee.name,
             sin=employee.sin,
+            employmentProvince=employee.employment_province,
             address=_party_address(
                 employee.address_line1,
                 employee.city,

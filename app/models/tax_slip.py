@@ -20,6 +20,7 @@ class T4EmployeeSummary(BaseModel):
     name: str
     sin: str
     address: TaxPartyAddress
+    employmentProvince: str | None = None
 
 
 class T4SlipPreview(BaseModel):

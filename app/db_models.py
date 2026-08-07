@@ -1,10 +1,17 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+ACTIVE_STATUS = "active"
+INACTIVE_STATUS = "inactive"
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class EmployerRecord(Base):
@@ -18,6 +25,13 @@ class EmployerRecord(Base):
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     province: Mapped[str | None] = mapped_column(String(2), nullable=True)
     postal_code: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default=ACTIVE_STATUS)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=_utc_now,
+        server_default=text("(CURRENT_TIMESTAMP)"),
+        nullable=False,
+    )
 
     employees: Mapped[list["EmployeeRecord"]] = relationship(back_populates="employer")
 
@@ -34,6 +48,14 @@ class EmployeeRecord(Base):
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     province: Mapped[str | None] = mapped_column(String(2), nullable=True)
     postal_code: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    employment_province: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default=ACTIVE_STATUS)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=_utc_now,
+        server_default=text("(CURRENT_TIMESTAMP)"),
+        nullable=False,
+    )
 
     employer: Mapped["EmployerRecord"] = relationship(back_populates="employees")
     ytd_records: Mapped[list["YtdRecord"]] = relationship(back_populates="employee")
