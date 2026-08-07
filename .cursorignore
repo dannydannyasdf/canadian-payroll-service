@@ -27,3 +27,13 @@ ENV/
 *.onnx
 dataset/
 data/
+
+# Generated outputs and local databases
+*.pdf
+payroll.db
+*.db
+*.sqlite3
+
+# Binary assets (logos; not useful for code indexing)
+Images/
+app/assets/
