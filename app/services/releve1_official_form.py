@@ -19,19 +19,22 @@ if not RELEVE1_FORM_PATH.exists() and PROJECT_FORM_PATH.exists():
     RELEVE1_FORM_PATH = PROJECT_FORM_PATH
 
 # Measured from RL-1(2026-10)_Logiciel_copie2_projet.pdf (letter, 612x792).
+# Amount boxes shifted +14 pt (~0.5 cm) on x so cents align with form sub-columns.
+_AMOUNT_X_OFFSET = 11.4
+
 FIELDS: dict[str, tuple[float, float, float, float]] = {
-    "year": (325.3, 46.0, 361.0, 55.7),
-    "box_A": (67.0, 79.0, 96.0, 102.0),
-    "box_B": (162.0, 79.0, 191.0, 102.0),
-    "box_C": (352.0, 79.0, 381.0, 102.0),
-    "box_E": (542.0, 79.0, 571.0, 102.0),
-    "box_G": (162.0, 103.0, 191.0, 126.0),
-    "box_I": (352.0, 103.0, 381.0, 126.0),
-    "sin_1": (358.0, 604.0, 391.0, 621.0),
-    "sin_2": (393.0, 604.0, 427.0, 621.0),
-    "sin_3": (429.0, 604.0, 470.0, 621.0),
-    "employer": (358.0, 640.0, 570.0, 705.0),
-    "employee": (26.0, 656.0, 312.0, 712.0),
+    "box_A": (67.0 + _AMOUNT_X_OFFSET, 79.0, 96.0 + _AMOUNT_X_OFFSET, 102.0),
+    "box_B": (162.0 + _AMOUNT_X_OFFSET, 79.0, 191.0 + _AMOUNT_X_OFFSET, 102.0),
+    "box_C": (352.0 + _AMOUNT_X_OFFSET, 79.0, 381.0 + _AMOUNT_X_OFFSET, 102.0),
+    "box_E": (542.0 + _AMOUNT_X_OFFSET, 79.0, 571.0 + _AMOUNT_X_OFFSET, 102.0),
+    "box_G": (162.0 + _AMOUNT_X_OFFSET, 103.0, 191.0 + _AMOUNT_X_OFFSET, 126.0),
+    "box_I": (352.0 + _AMOUNT_X_OFFSET, 103.0, 381.0 + _AMOUNT_X_OFFSET, 126.0),
+    "sin_1": (358.0, 612.0, 391.0, 629.0),
+    "sin_2": (393.0, 612.0, 427.0, 629.0),
+    "sin_3": (429.0, 612.0, 470.0, 629.0),
+    "employer": (358.0, 648.0, 570.0, 713.0),
+    "employee_name": (26.0, 672.0, 312.0, 690.0),
+    "employee_address": (26.0, 690.0, 312.0, 728.0),
 }
 
 
@@ -121,14 +124,6 @@ def _fill_form(page: pymupdf.Page, slip: Releve1SlipPreview) -> None:
     sin1, sin2, sin3 = _sin_segments(slip.employee.sin)
     boxes = slip.boxes
 
-    _write_textbox(
-        page,
-        _rect(FIELDS["year"]),
-        str(slip.taxYear),
-        fontsize=10,
-        align=pymupdf.TEXT_ALIGN_CENTER,
-    )
-
     for box_key, field_key in (
         ("A", "box_A"),
         ("B", "box_B"),
@@ -151,9 +146,15 @@ def _fill_form(page: pymupdf.Page, slip: Releve1SlipPreview) -> None:
 
     _write_textbox(page, _rect(FIELDS["employer"]), _employer_block(slip), fontsize=8)
 
-    employee_lines = [f"{surname}, {given_name}"]
-    employee_lines.extend(_format_address(slip.employee.address))
-    _write_textbox(page, _rect(FIELDS["employee"]), "\n".join(employee_lines), fontsize=8)
+    _write_textbox(
+        page,
+        _rect(FIELDS["employee_name"]),
+        f"{surname}, {given_name}",
+        fontsize=8,
+    )
+    address_lines = _format_address(slip.employee.address)
+    if address_lines:
+        _write_textbox(page, _rect(FIELDS["employee_address"]), "\n".join(address_lines), fontsize=8)
 
 
 def render_releve1_official_form_pdf(slip: Releve1SlipPreview) -> bytes:
