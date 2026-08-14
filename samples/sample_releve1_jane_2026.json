@@ -4,6 +4,7 @@
     "id": 1,
     "name": "Jane Freelancer",
     "sin": "130-692-544",
+    "employmentProvince": "QC",
     "address": {
       "line1": null,
       "city": null,

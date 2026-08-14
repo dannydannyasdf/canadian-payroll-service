@@ -192,12 +192,12 @@ PAYROLL_PROVIDER_ADDRESS_* → Montréal QC address
 PAYROLL_CRA_PAYROLL_ACCOUNT=10668 8385 RP0001   # spaced on PDF; stripped for XML
 PAYROLL_CRA_TRANSMITTER_BN9 → derived from payroll account (106688385)
 PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE=ON
-PAYROLL_RQ_EMPLOYER_ID=1234567890              # GP's Revenu Québec dossier ID
+PAYROLL_RQ_EMPLOYER_ID=1003372801              # GP's Revenu Québec dossier ID
 PAYROLL_RQ_PARTNER_REGISTRATION=I1000625       # Gamma Personnel partner registration (not the preparer No)
 PAYROLL_RQ_NEQ=1142427765                      # Gamma Personnel NEQ (shown on RL-1 PDF)
 PAYROLL_RQ_PARTNER_ID=0000000000000271         # Gamma Personnel partner identifier (IdPartenaireReleves)
 PAYROLL_RQ_PREPARATEUR_NO=NP100625             # Numéro du préparateur — official XML <Preparateur><No>
-PAYROLL_RQ_CERTIFICATION_NO=RQ-26-01-010       # Software certification number
+PAYROLL_RQ_CERTIFICATION_NO=RQ-99-99-999       # Software certification number
 PAYROLL_RQ_DOSSIER_NO=0271                     # 4-digit dossier number on T summary
 PAYROLL_CLIENT_LOGO_PATH / PAYROLL_PROVIDER_LOGO_PATH
 DEMO_API_KEY=gamma-dev-api-key

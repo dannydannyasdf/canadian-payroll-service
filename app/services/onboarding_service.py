@@ -33,6 +33,7 @@ from app.models.onboarding import (
     PartyAddressInput,
     PartyAddressResponse,
 )
+from app.demo_defaults import default_employment_province_for_sin
 from app.services.provider_config import filing_employer_display_name
 from app.sin import normalize_sin
 
@@ -238,7 +239,10 @@ def create_employee(
         name=payload.name,
         sin=payload.sin,
         status=ACTIVE_STATUS,
-        employment_province=_resolve_employment_province(payload),
+        employment_province=(
+            _resolve_employment_province(payload)
+            or default_employment_province_for_sin(payload.sin)
+        ),
     )
     _apply_address(employee, payload.address)
     db.add(employee)
@@ -341,6 +345,13 @@ def resolve_employer_for_payroll(
     return employer
 
 
+def _apply_demo_employment_province(employee: EmployeeRecord) -> None:
+    if employee.employment_province is None:
+        default_province = default_employment_province_for_sin(employee.sin)
+        if default_province is not None:
+            employee.employment_province = default_province
+
+
 def resolve_employee_for_payroll(
     db: Session,
     employer: EmployerRecord,
@@ -366,6 +377,7 @@ def resolve_employee_for_payroll(
                 f"Employee SIN does not match registered employee {employee_id}."
             )
         employee.name = name.strip()
+        _apply_demo_employment_province(employee)
         return employee
 
     employee = (
@@ -379,6 +391,7 @@ def resolve_employee_for_payroll(
             name=name.strip(),
             sin=normalized_sin,
             status=ACTIVE_STATUS,
+            employment_province=default_employment_province_for_sin(normalized_sin),
         )
         db.add(employee)
         db.flush()
@@ -387,4 +400,5 @@ def resolve_employee_for_payroll(
     if employee.status == INACTIVE_STATUS:
         raise InactiveEmployeeError(employee.id)
     employee.name = name.strip()
+    _apply_demo_employment_province(employee)
     return employee

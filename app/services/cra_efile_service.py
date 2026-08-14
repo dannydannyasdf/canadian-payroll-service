@@ -331,17 +331,18 @@ def build_preview_cra_submission_xml(slips: list[T4SlipPreview], tax_year: int) 
     summary = etree.SubElement(t4_return, "T4Summary")
     _append_text(summary, "payrollAccountNumber", _payroll_account(slips[0]))
     _append_text(summary, "totEmptIncamt", _cra_amount(_sum_boxes(slips, "14")))
-    _append_text(summary, "totEmpeEipAmt", _cra_amount(_sum_boxes(slips, "18")))
-    _append_text(summary, "totItxDdctAmt", _cra_amount(_sum_boxes(slips, "22")))
-    _append_text(summary, "totEiInsuErnAmt", _cra_amount(_sum_boxes(slips, "24")))
-    _append_text(summary, "totCppQppErnAmt", _cra_amount(_sum_boxes(slips, "26")))
-    _append_text(summary, "slipCount", len(slips))
 
     pension_total = _sum_pension(slips)
     if _employment_province(slips[0]) == "QC":
         _append_text(summary, "totQppCntrbAmt", _cra_amount(pension_total))
     else:
         _append_text(summary, "totCppCntrbAmt", _cra_amount(pension_total))
+
+    _append_text(summary, "totEmpeEipAmt", _cra_amount(_sum_boxes(slips, "18")))
+    _append_text(summary, "totItxDdctAmt", _cra_amount(_sum_boxes(slips, "22")))
+    _append_text(summary, "totEiInsuErnAmt", _cra_amount(_sum_boxes(slips, "24")))
+    _append_text(summary, "totCppQppErnAmt", _cra_amount(_sum_boxes(slips, "26")))
+    _append_text(summary, "slipCount", len(slips))
 
     for slip in slips:
         t4_return.append(_build_preview_t4_slip(slip))
