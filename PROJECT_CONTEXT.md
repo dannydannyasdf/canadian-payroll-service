@@ -43,9 +43,15 @@
 **Future work (Phase 7+):**
 - Amended / cancel e-file report types (CRA `A`/`C`, RQ `A`/`D`) — currently Original only
 - Richer tax box mappings (federal vs Québec income tax split, QPP/QPIP caps, pensionable/insurable ceilings)
-- Automated tests for official CRA/RQ XML validation and PDF overlay output
-- Demo seed data: set sample employee Jane's `employmentProvince` to `QC` so RQ XML works from `/demo`
-- Replace placeholder RQ dossier / employer IDs with production values when GP receives them
+- RQ certification test-case submission (IN-800 §3) for a real `RQ-##-##-###` number
+- PDF authorization number overlay (`FS######`, IN-412 §3.14) and 2D barcode on RL-1 copy 1 (IN-412 §3.16)
+- RLZ-1.S employer summary form for paper / Mon Dossier paths
+
+**Recently completed (post Phase 6.4):**
+- Demo seed: Jane's `employmentProvince` set to `QC` (migration 004)
+- Automated pytest suite for SIN, CRA/RQ e-file XML, YTD, PDF overlay
+- IN-800 compliance: `NoId` uses `PAYROLL_RQ_EMPLOYER_ID` (not NEQ); modulus-7 `NoReleve` allocation with DB sequence
+- `docs/rq/` reference folder for IN-412-V and IN-800-V guides
 
 ---
 
@@ -88,6 +94,7 @@ canadian-payroll-service/
 │   ├── database.py             # SQLAlchemy engine/session
 │   ├── db_models.py            # employers, employees, pay_periods, ytd_totals, billing_events
 │   ├── sin.py                  # SIN validation (Luhn, no leading 0/8)
+│   ├── rq_releve_number.py     # Modulus-7 check digit for NoReleve (IN-800)
 │   ├── exceptions.py
 │   ├── models/                 # Pydantic: payroll, cumulative, tax_slip, onboarding, employee
 │   ├── routes/
@@ -103,6 +110,7 @@ canadian-payroll-service/
 │   │   ├── tax_slip_service.py     # T4/Relevé 1 preview from YTD
 │   │   ├── cra_efile_service.py    # CRA T4 e-file (official + preview)
 │   │   ├── rq_efile_service.py     # Relevé 1 e-file (official + preview)
+│   │   ├── rq_releve_sequence_service.py  # Official NoReleve allocation (IN-800)
 │   │   ├── onboarding_service.py
 │   │   ├── stub_archive_service.py
 │   │   ├── billing_service.py
@@ -110,7 +118,8 @@ canadian-payroll-service/
 │   ├── tax/box_mapping.py      # YTD → T4 boxes & Relevé 1 boxes
 │   ├── templates/              # Jinja2 HTML for PDFs + demo.html
 │   └── assets/forms/           # t4-25e.pdf, releve1-2026-10.pdf (gitignored; copy locally)
-├── alembic/versions/           # 001 baseline, 002 tax metadata, 003 onboarding status
+├── alembic/versions/           # 001 baseline … 005 rq_releve_number
+├── docs/rq/                    # IN-412-V / IN-800-V reference guides (PDFs gitignored)
 ├── schemas/
 │   ├── payroll.xsd             # Ingress contract
 │   ├── cra/                    # Official CRA XSD subset + t4_efile_preview.xsd
@@ -181,6 +190,8 @@ canadian-payroll-service/
 - **Partner registration vs preparer number:** These are different identifiers:
   - `PAYROLL_RQ_PARTNER_REGISTRATION=I1000625` — Gamma Personnel partner registration (business reference).
   - `PAYROLL_RQ_PREPARATEUR_NO=NP100625` — **Numéro du préparateur** for the `<Preparateur><No>` element in official XML (must match `NP######` / `np######` pattern).
+- **Employer file ID vs NEQ:** `<Employeur><NoId>` is the 10-digit RQ dossier ID (`PAYROLL_RQ_EMPLOYER_ID`). The NEQ (`PAYROLL_RQ_NEQ`) is a separate optional field on the same block.
+- **NoReleve:** Official XML requires a 9-digit slip number with modulus-7 check digit (IN-800 Schedule 1). Allocated via `rq_releve_sequence` table; base configured with `PAYROLL_RQ_RELEVE_SEQ_BASE`.
 - **Validation root:** `schemas/rq/Transmission.xsd` (falls back to `releve1_efile_preview.xsd` when official package absent).
 
 ### Environment variables (defaults)
@@ -199,6 +210,7 @@ PAYROLL_RQ_PARTNER_ID=0000000000000271         # Gamma Personnel partner identif
 PAYROLL_RQ_PREPARATEUR_NO=NP100625             # Numéro du préparateur — official XML <Preparateur><No>
 PAYROLL_RQ_CERTIFICATION_NO=RQ-99-99-999       # Software certification number
 PAYROLL_RQ_DOSSIER_NO=0271                     # 4-digit dossier number on T summary
+PAYROLL_RQ_RELEVE_SEQ_BASE=71997012            # 8-digit RL-slip series base (check digit computed)
 PAYROLL_CLIENT_LOGO_PATH / PAYROLL_PROVIDER_LOGO_PATH
 DEMO_API_KEY=gamma-dev-api-key
 DATABASE_URL=postgresql+psycopg://payroll:payroll@db:5432/payroll

@@ -108,6 +108,7 @@ class YtdRecord(Base):
     last_period_start: Mapped[date | None] = mapped_column(Date, nullable=True)
     last_period_end: Mapped[date | None] = mapped_column(Date, nullable=True)
     last_pay_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    rq_releve_no: Mapped[str | None] = mapped_column(String(9), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("(CURRENT_TIMESTAMP)"),
@@ -116,6 +117,15 @@ class YtdRecord(Base):
     )
 
     employee: Mapped["EmployeeRecord"] = relationship(back_populates="ytd_records")
+
+
+class RqReleveSequence(Base):
+    """Monotonic 8-digit base counter for official RL-1 NoReleve allocation."""
+
+    __tablename__ = "rq_releve_sequence"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    next_base: Mapped[int] = mapped_column(nullable=False)
 
 
 class BillingEvent(Base):

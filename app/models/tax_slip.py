@@ -45,3 +45,4 @@ class Releve1SlipPreview(BaseModel):
     boxLabels: dict[str, str]
     disclaimers: list[str]
     status: str = "preview"
+    releveNumber: str | None = None

@@ -30,6 +30,7 @@ from app.services.provider_config import (
     PROVIDER_PROVINCE,
     RQ_CERTIFICATION_NO,
     RQ_DOSSIER_NO,
+    RQ_EMPLOYER_ID,
     RQ_NEQ,
     RQ_PARTNER_ID,
     RQ_PREPARATEUR_NO,
@@ -38,6 +39,7 @@ from app.services.provider_config import (
     RQ_SOFTWARE_NAME,
     RQ_SOFTWARE_VERSION,
 )
+from app.services.rq_releve_sequence_service import ensure_rq_releve_no
 from app.services.stub_archive_service import EmployeeNotFoundError
 from app.services.tax_slip_service import build_releve1_preview
 
@@ -113,7 +115,7 @@ def rq_schema_inventory() -> dict[str, object]:
             if official_loadable
             else (RQ_EFILE_PREVIEW_XSD.name if preview_available else None)
         ),
-        "rqEmployerIdConfigured": bool(RQ_NEQ),
+        "rqEmployerIdConfigured": bool(RQ_EMPLOYER_ID),
         "rqPartnerIdConfigured": bool(RQ_PARTNER_ID),
     }
 
@@ -194,7 +196,17 @@ def _append_address(parent: etree._Element, address: TaxPartyAddress, *, fallbac
 
 
 def _releve_number(slip: Releve1SlipPreview) -> str:
+    if slip.releveNumber:
+        return slip.releveNumber
     return f"{slip.taxYear % 100:02d}{slip.employee.id:07d}"
+
+
+def _prepare_official_slips(db: Session, slips: list[Releve1SlipPreview]) -> list[Releve1SlipPreview]:
+    prepared: list[Releve1SlipPreview] = []
+    for slip in slips:
+        releve_no = ensure_rq_releve_no(db, slip.employee.id, slip.taxYear)
+        prepared.append(slip.model_copy(update={"releveNumber": releve_no}))
+    return prepared
 
 
 def _sum_boxes(slips: list[Releve1SlipPreview], box: str) -> Decimal:
@@ -275,7 +287,7 @@ def _build_official_t_summary(slips: list[Releve1SlipPreview], tax_year: int) ->
     _append_text(t_el, "NbReleves", len(slips))
 
     employeur = etree.SubElement(t_el, "Employeur")
-    _append_text(employeur, "NoId", RQ_NEQ)
+    _append_text(employeur, "NoId", RQ_EMPLOYER_ID)
     _append_text(employeur, "TypeDossier", "RS")
     _append_text(employeur, "NoDossier", RQ_DOSSIER_NO)
     _append_text(employeur, "NEQ", RQ_NEQ)
@@ -411,10 +423,14 @@ def build_and_validate_rq_submission_xml(
     tax_year: int,
     *,
     official: bool | None = None,
+    db: Session | None = None,
 ) -> str:
     use_official = official_schema_available() if official is None else official
 
     if use_official:
+        if db is None:
+            raise ValueError("Database session is required for official Relevé 1 e-file XML.")
+        slips = _prepare_official_slips(db, slips)
         xml_text = build_official_rq_submission_xml(slips, tax_year)
         validate_official_rq_efile_xml(xml_text)
         return xml_text
@@ -439,7 +455,7 @@ def build_employee_releve1_efile_xml(
 ) -> str:
     slip = build_releve1_preview(db, employee_id, tax_year)
     _require_quebec_employment(slip)
-    return build_and_validate_rq_submission_xml([slip], tax_year, official=official)
+    return build_and_validate_rq_submission_xml([slip], tax_year, official=official, db=db)
 
 
 def build_rq_filing_xml(
@@ -467,4 +483,4 @@ def build_rq_filing_xml(
     if not previews:
         raise RqFilingNotFoundError(tax_year)
 
-    return build_and_validate_rq_submission_xml(previews, tax_year, official=official)
+    return build_and_validate_rq_submission_xml(previews, tax_year, official=official, db=db)
