@@ -58,6 +58,7 @@ def build_stub_archive(db: Session, employee_id: int, tax_year: int) -> list[dic
         "gross_pay": Decimal("0.00"),
         "cpp": Decimal("0.00"),
         "ei": Decimal("0.00"),
+        "qpip": Decimal("0.00"),
         "income_tax": Decimal("0.00"),
         "net_pay": Decimal("0.00"),
     }
@@ -67,6 +68,7 @@ def build_stub_archive(db: Session, employee_id: int, tax_year: int) -> list[dic
         running["gross_pay"] += period.gross_pay
         running["cpp"] += period.cpp
         running["ei"] += period.ei
+        running["qpip"] += period.qpip
         running["income_tax"] += period.income_tax
         running["net_pay"] += period.net_pay
 
@@ -82,11 +84,14 @@ def build_stub_archive(db: Session, employee_id: int, tax_year: int) -> list[dic
                 "gross_pay": period.gross_pay,
                 "cpp": period.cpp,
                 "ei": period.ei,
+                "qpip": period.qpip,
                 "income_tax": period.income_tax,
                 "net_pay": period.net_pay,
+                "employment_province": employee.employment_province,
                 "ytd_gross_pay": running["gross_pay"],
                 "ytd_cpp": running["cpp"],
                 "ytd_ei": running["ei"],
+                "ytd_qpip": running["qpip"],
                 "ytd_income_tax": running["income_tax"],
                 "ytd_net_pay": running["net_pay"],
             }

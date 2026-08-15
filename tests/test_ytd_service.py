@@ -25,8 +25,9 @@ def _sample_payload() -> PayrollPayload:
             cpp=Decimal("288.00"),
             ei=Decimal("82.00"),
             incomeTax=Decimal("1100.00"),
+            qpip=Decimal("21.50"),
         ),
-        netPay=Decimal("3530.00"),
+        netPay=Decimal("3508.50"),
     )
 
 
@@ -44,6 +45,8 @@ def test_accumulate_ytd_sets_demo_employment_province(db_session: Session) -> No
 
     employee = db_session.query(EmployeeRecord).filter_by(id=response.employee_id).one()
     assert employee.employment_province == DEMO_EMPLOYMENT_PROVINCE
+    assert response.employment_province == DEMO_EMPLOYMENT_PROVINCE
+    assert response.totals.qpip == Decimal("21.50")
     assert (
         db_session.query(PayPeriodRecord)
         .filter_by(employee_id=employee.id)

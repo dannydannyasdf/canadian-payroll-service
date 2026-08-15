@@ -82,6 +82,7 @@ class PayPeriodRecord(Base):
     gross_pay: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     cpp: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     ei: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    qpip: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     income_tax: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     net_pay: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -103,6 +104,7 @@ class YtdRecord(Base):
     gross_pay: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     cpp: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     ei: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    qpip: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     income_tax: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     net_pay: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     last_period_start: Mapped[date | None] = mapped_column(Date, nullable=True)

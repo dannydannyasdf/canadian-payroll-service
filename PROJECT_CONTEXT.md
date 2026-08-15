@@ -43,7 +43,6 @@
 **Future work (Phase 7+):**
 - Provincial/territorial income tax (`T2`) via T4127 for non-Québec provinces
 - Québec **provincial** income tax (Revenu Québec formulas — separate from T4127)
-- CPP, EI, and QPIP contribution calculation (currently accepted as inputs)
 - T4127 Option 2 cumulative averaging; bonuses and non-periodic payments
 - Amended / cancel e-file report types (CRA `A`/`C`, RQ `A`/`D`) — currently Original only
 - Richer tax box mappings (split stored federal vs provincial amounts on T4 / Relevé 1)
@@ -57,6 +56,7 @@
 - IN-800 compliance: `NoId` uses `PAYROLL_RQ_EMPLOYER_ID` (not NEQ); modulus-7 `NoReleve` allocation with DB sequence
 - `docs/rq/` reference folder for IN-412-V and IN-800-V guides
 - **Federal income tax calculator** — CRA T4127 Option 1 (July 2026 rates); `POST /payroll/calculate-deductions`
+- **CPP/EI/QPIP calculator** — T4127 Chapters 6–7; demo page auto-recalculates on gross pay change
 - `docs/CRA/` reference folder for T4127 Payroll Deductions Formulas
 
 ---

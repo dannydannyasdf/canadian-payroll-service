@@ -1,0 +1,22 @@
+      <tr>
+        <td>{{ "QPP" if employment_province == "QC" else "CPP" }}</td>
+        <td class="amount">{{ cpp | money }}</td>
+        <td class="amount ytd">{{ ytd_cpp | money }}</td>
+      </tr>
+      <tr>
+        <td>EI</td>
+        <td class="amount">{{ ei | money }}</td>
+        <td class="amount ytd">{{ ytd_ei | money }}</td>
+      </tr>
+      {% if employment_province == "QC" %}
+      <tr>
+        <td>QPIP</td>
+        <td class="amount">{{ qpip | money }}</td>
+        <td class="amount ytd">{{ ytd_qpip | money }}</td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td>Income tax deducted{% if employment_province == "QC" %} (federal){% else %} (Box 22){% endif %}</td>
+        <td class="amount">{{ income_tax | money }}</td>
+        <td class="amount ytd">{{ ytd_income_tax | money }}</td>
+      </tr>

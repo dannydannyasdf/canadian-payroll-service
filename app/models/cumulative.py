@@ -10,6 +10,7 @@ class CumulativeTotals(BaseModel):
     gross_pay: Decimal = Field(alias="grossPay")
     cpp: Decimal
     ei: Decimal
+    qpip: Decimal = Decimal("0")
     income_tax: Decimal = Field(alias="incomeTax")
     net_pay: Decimal = Field(alias="netPay")
 
@@ -32,6 +33,7 @@ class CumulativeResponse(BaseModel):
     employer_name: str = Field(alias="employerName")
     employee_name: str = Field(alias="employeeName")
     employee_sin: str = Field(alias="employeeSin")
+    employment_province: str | None = Field(default=None, alias="employmentProvince")
     totals: CumulativeTotals
     last_pay_period: LastPayPeriod = Field(alias="lastPayPeriod")
 
@@ -39,9 +41,11 @@ class CumulativeResponse(BaseModel):
         """YTD fields for the Jinja2 pay stub template."""
         return {
             "tax_year": self.tax_year,
+            "employment_province": self.employment_province,
             "ytd_gross_pay": self.totals.gross_pay,
             "ytd_cpp": self.totals.cpp,
             "ytd_ei": self.totals.ei,
+            "ytd_qpip": self.totals.qpip,
             "ytd_income_tax": self.totals.income_tax,
             "ytd_net_pay": self.totals.net_pay,
         }

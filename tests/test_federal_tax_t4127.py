@@ -130,12 +130,12 @@ def test_calculate_deductions_api_model() -> None:
         CalculateDeductionsRequest.model_validate(
             {
                 "grossPay": "1000.00",
-                "cpp": "204.25",
-                "ei": "16.30",
                 "payPeriodsPerYear": 52,
                 "province": "ON",
             }
         )
     )
-    assert response.income_tax == Decimal("75.10")
-    assert response.federal.federal_income_tax == Decimal("75.10")
+    assert response.cpp == Decimal("55.50")
+    assert response.ei == Decimal("16.30")
+    assert response.qpip == Decimal("0.00")
+    assert response.net_pay == Decimal("1000.00") - response.cpp - response.ei - response.income_tax

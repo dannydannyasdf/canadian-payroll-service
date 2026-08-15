@@ -30,9 +30,10 @@
     {% with employee_name=stub.employee_name, employee_sin=stub.employee_sin,
             period_start=stub.period_start, period_end=stub.period_end, pay_date=stub.pay_date,
             tax_year=stub.tax_year, gross_pay=stub.gross_pay, cpp=stub.cpp, ei=stub.ei,
-            income_tax=stub.income_tax, net_pay=stub.net_pay,
+            qpip=stub.qpip, income_tax=stub.income_tax, net_pay=stub.net_pay,
+            employment_province=stub.employment_province,
             ytd_gross_pay=stub.ytd_gross_pay, ytd_cpp=stub.ytd_cpp, ytd_ei=stub.ytd_ei,
-            ytd_income_tax=stub.ytd_income_tax, ytd_net_pay=stub.ytd_net_pay %}
+            ytd_qpip=stub.ytd_qpip, ytd_income_tax=stub.ytd_income_tax, ytd_net_pay=stub.ytd_net_pay %}
     {% include "pay_stub_period.html" %}
     {% endwith %}
   </section>

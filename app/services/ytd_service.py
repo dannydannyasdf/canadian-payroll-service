@@ -37,6 +37,7 @@ def _get_or_create_ytd(db: Session, employee: EmployeeRecord, tax_year: int) -> 
             gross_pay=Decimal("0.00"),
             cpp=Decimal("0.00"),
             ei=Decimal("0.00"),
+            qpip=Decimal("0.00"),
             income_tax=Decimal("0.00"),
             net_pay=Decimal("0.00"),
         )
@@ -83,6 +84,7 @@ def accumulate_ytd(db: Session, payload: PayrollPayload) -> CumulativeResponse:
             gross_pay=payload.earnings.gross_pay,
             cpp=payload.deductions.cpp,
             ei=payload.deductions.ei,
+            qpip=payload.deductions.qpip,
             income_tax=payload.deductions.income_tax,
             net_pay=payload.net_pay,
         )
@@ -93,6 +95,7 @@ def accumulate_ytd(db: Session, payload: PayrollPayload) -> CumulativeResponse:
     ytd.gross_pay += payload.earnings.gross_pay
     ytd.cpp += payload.deductions.cpp
     ytd.ei += payload.deductions.ei
+    ytd.qpip += payload.deductions.qpip
     ytd.income_tax += payload.deductions.income_tax
     ytd.net_pay += payload.net_pay
     ytd.last_period_start = payload.pay_period.start_date
@@ -108,10 +111,12 @@ def accumulate_ytd(db: Session, payload: PayrollPayload) -> CumulativeResponse:
         employerName=employer.name,
         employeeName=employee.name,
         employeeSin=employee.sin,
+        employmentProvince=employee.employment_province,
         totals=CumulativeTotals(
             grossPay=ytd.gross_pay,
             cpp=ytd.cpp,
             ei=ytd.ei,
+            qpip=ytd.qpip,
             incomeTax=ytd.income_tax,
             netPay=ytd.net_pay,
         ),

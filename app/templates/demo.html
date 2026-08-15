@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Pay Stub Demo</title>
+  <link rel="icon" href="/images/GammaHeadsOrange.png" type="image/png">
   <style>
     :root {
       color-scheme: light;
@@ -324,25 +325,31 @@
 
       <div class="card">
         <h2>Amounts (CAD)</h2>
+        <p class="field-hint">CPP/QPP, EI, QPIP (QC employment), and federal tax use CRA T4127 (July 2026). Province follows employment province, not home address.</p>
         <label for="amount-gross">Gross pay</label>
-        <input id="amount-gross" data-recalc-net name="grossPay" inputmode="decimal" required>
+        <input id="amount-gross" data-recalc-deductions name="grossPay" inputmode="decimal" required>
 
         <div class="row">
           <div>
-            <label for="amount-cpp">CPP</label>
-            <input id="amount-cpp" data-recalc-net name="cpp" inputmode="decimal" required>
+            <label for="amount-cpp">CPP / QPP</label>
+            <input id="amount-cpp" name="cpp" inputmode="decimal" readonly required>
           </div>
           <div>
             <label for="amount-ei">EI</label>
-            <input id="amount-ei" data-recalc-net name="ei" inputmode="decimal" required>
+            <input id="amount-ei" name="ei" inputmode="decimal" readonly required>
           </div>
         </div>
 
-        <label for="amount-income-tax">Income tax (Box 22)</label>
-        <input id="amount-income-tax" data-recalc-net name="incomeTax" inputmode="decimal" required>
+        <div id="qpip-row" hidden>
+          <label for="amount-qpip">QPIP (QC)</label>
+          <input id="amount-qpip" name="qpip" inputmode="decimal" readonly>
+        </div>
+
+        <label for="amount-income-tax">Income tax (federal)</label>
+        <input id="amount-income-tax" name="incomeTax" inputmode="decimal" readonly required>
 
         <label for="amount-net">Net pay (calculated)</label>
-        <p class="field-hint">Gross pay minus CPP, EI, and income tax.</p>
+        <p class="field-hint">Gross pay minus CPP/QPP, EI, QPIP (if QC), and federal income tax.</p>
         <input id="amount-net" name="netPay" inputmode="decimal" readonly required>
       </div>
 
@@ -391,6 +398,8 @@
     const fieldGross = document.getElementById("amount-gross");
     const fieldCpp = document.getElementById("amount-cpp");
     const fieldEi = document.getElementById("amount-ei");
+    const fieldQpip = document.getElementById("amount-qpip");
+    const qpipRow = document.getElementById("qpip-row");
     const fieldIncomeTax = document.getElementById("amount-income-tax");
     const fieldNet = document.getElementById("amount-net");
 
@@ -399,6 +408,9 @@
     let lastTaxYear = null;
     let registeredEmployers = [];
     let registeredEmployees = [];
+    let deductionsTimer = null;
+    let deductionsRequestId = 0;
+    let lastCumulative = null;
 
     async function loadEmployers() {
       employerSelect.innerHTML = '<option value="">— Loading employers… —</option>';
@@ -490,12 +502,14 @@
     function applyEmployeeSelection() {
       const selectedId = employeeSelect.value;
       if (!selectedId) {
+        scheduleRecalcDeductions();
         return;
       }
       const employee = registeredEmployees.find((item) => String(item.id) === selectedId);
       if (employee) {
         document.getElementById("employee-name").value = employee.name;
         document.getElementById("employee-sin").value = employee.sin;
+        scheduleRecalcDeductions();
       }
     }
 
@@ -514,12 +528,135 @@
       return Number.isFinite(amount) ? amount : 0;
     }
 
+    function payPeriodsPerYear() {
+      const startValue = document.getElementById("start-date").value;
+      const endValue = document.getElementById("end-date").value;
+      if (!startValue || !endValue) {
+        return 52;
+      }
+      const start = new Date(startValue + "T00:00:00");
+      const end = new Date(endValue + "T00:00:00");
+      const days = Math.round((end - start) / 86_400_000) + 1;
+      if (days <= 1) {
+        return 365;
+      }
+      if (days <= 7) {
+        return 52;
+      }
+      if (days <= 14) {
+        return 26;
+      }
+      if (days <= 16) {
+        return 24;
+      }
+      if (days <= 31) {
+        return 12;
+      }
+      return 52;
+    }
+
+    function currentProvince() {
+      const selectedId = employeeSelect.value;
+      if (selectedId) {
+        const employee = registeredEmployees.find((item) => String(item.id) === selectedId);
+        if (employee && employee.employmentProvince) {
+          return employee.employmentProvince;
+        }
+      }
+      const sin = document.getElementById("employee-sin").value.replace(/\D/g, "");
+      if (sin === "130692544") {
+        return "QC";
+      }
+      return "ON";
+    }
+
+    function updateQpipVisibility(province) {
+      const showQpip = province === "QC";
+      qpipRow.hidden = !showQpip;
+      if (!showQpip) {
+        fieldQpip.value = "0.00";
+      }
+    }
+
+    async function recalcDeductions() {
+      const gross = parseAmount(fieldGross.value);
+      if (gross <= 0) {
+        fieldCpp.value = "";
+        fieldEi.value = "";
+        fieldIncomeTax.value = "";
+        fieldNet.value = "";
+        fieldQpip.value = "";
+        return;
+      }
+
+      const province = currentProvince();
+      updateQpipVisibility(province);
+      const requestId = ++deductionsRequestId;
+
+      try {
+        const body = {
+          grossPay: gross.toFixed(2),
+          payPeriodsPerYear: payPeriodsPerYear(),
+          province,
+          federalClaimCode: 1,
+        };
+        if (lastCumulative) {
+          body.ytdCpp = lastCumulative.totals.cpp;
+          body.ytdCpp2 = "0.00";
+          body.ytdPensionableEarnings = lastCumulative.totals.grossPay;
+          body.ytdEi = lastCumulative.totals.ei;
+          body.ytdQpip = lastCumulative.totals.qpip || "0.00";
+          body.ytdInsurableEarnings = lastCumulative.totals.grossPay;
+        }
+
+        const response = await fetch("/payroll/calculate-deductions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: apiKey,
+          },
+          body: JSON.stringify(body),
+        });
+        const data = await response.json();
+        if (requestId !== deductionsRequestId) {
+          return;
+        }
+        if (!response.ok) {
+          let detail = "Could not calculate deductions.";
+          if (typeof data.detail === "string") {
+            detail = data.detail;
+          } else if (Array.isArray(data.detail)) {
+            detail = data.detail.map((item) => item.msg || JSON.stringify(item)).join("; ");
+          }
+          throw new Error(detail);
+        }
+
+        fieldCpp.value = data.cpp;
+        fieldEi.value = data.ei;
+        fieldIncomeTax.value = data.incomeTax;
+        fieldQpip.value = data.qpip || "0.00";
+        fieldNet.value = data.netPay;
+      } catch (err) {
+        if (requestId === deductionsRequestId) {
+          showMessage(err.message, "error");
+        }
+      }
+    }
+
+    function scheduleRecalcDeductions() {
+      clearTimeout(deductionsTimer);
+      deductionsTimer = setTimeout(() => {
+        recalcDeductions();
+      }, 250);
+    }
+
     function recalcNetPay() {
       const gross = parseAmount(fieldGross.value);
       const cpp = parseAmount(fieldCpp.value);
       const ei = parseAmount(fieldEi.value);
+      const qpip = parseAmount(fieldQpip.value);
       const tax = parseAmount(fieldIncomeTax.value);
-      const net = Math.max(0, gross - cpp - ei - tax);
+      const net = Math.max(0, gross - cpp - ei - qpip - tax);
       fieldNet.value = net.toFixed(2);
     }
 
@@ -534,7 +671,7 @@
       fieldCpp.value = sample.deductions.cpp;
       fieldEi.value = sample.deductions.ei;
       fieldIncomeTax.value = sample.deductions.incomeTax;
-      recalcNetPay();
+      scheduleRecalcDeductions();
       syncEmployerSelectToName();
     }
 
@@ -555,6 +692,7 @@
           cpp: fieldCpp.value.trim(),
           ei: fieldEi.value.trim(),
           incomeTax: fieldIncomeTax.value.trim(),
+          qpip: fieldQpip.value.trim() || "0.00",
         },
         netPay: fieldNet.value.trim(),
       };
@@ -766,8 +904,20 @@
 
     ["input", "change", "blur"].forEach((eventName) => {
       form.addEventListener(eventName, (event) => {
-        if (event.target instanceof HTMLInputElement && event.target.hasAttribute("data-recalc-net")) {
-          recalcNetPay();
+        if (event.target instanceof HTMLInputElement && event.target.hasAttribute("data-recalc-deductions")) {
+          scheduleRecalcDeductions();
+        }
+      });
+    });
+
+    ["change", "blur"].forEach((eventName) => {
+      form.addEventListener(eventName, (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) {
+          return;
+        }
+        if (target.id === "start-date" || target.id === "end-date" || target.id === "employee-sin") {
+          scheduleRecalcDeductions();
         }
       });
     });
@@ -803,7 +953,7 @@
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       clearMessage();
-      recalcNetPay();
+      await recalcDeductions();
       submitBtn.disabled = true;
       submitBtn.textContent = "Generating…";
 
@@ -831,11 +981,16 @@
         const ytd = data.cumulative.totals;
         lastEmployeeId = data.cumulative.employeeId;
         lastTaxYear = data.cumulative.taxYear;
+        lastCumulative = data.cumulative;
         showMessage("Pay stub generated successfully.", "success");
-        ytdSummary.textContent =
+        let ytdSummaryText =
           "YTD gross: $" + ytd.grossPay +
-          " · YTD net: $" + ytd.netPay +
-          " (tax year " + data.cumulative.taxYear + ")";
+          " · YTD net: $" + ytd.netPay;
+        if (data.cumulative.employmentProvince === "QC" && ytd.qpip) {
+          ytdSummaryText += " · YTD QPIP: $" + ytd.qpip;
+        }
+        ytdSummaryText += " (tax year " + data.cumulative.taxYear + ")";
+        ytdSummary.textContent = ytdSummaryText;
         setPdfLinks(data.payStubPdfBase64);
       } catch (err) {
         showMessage("Network error: " + err.message, "error");

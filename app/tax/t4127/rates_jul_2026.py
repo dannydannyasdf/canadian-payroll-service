@@ -1,8 +1,4 @@
-"""CRA T4127 rate tables — 123rd edition effective July 1, 2026.
-
-Source: Table 8.1 and Table 8.2 in T4127-JUL, bundled from
-https://www.canada.ca/content/dam/cra-arc/formspubs/pub/t4127-jul/rates-income-thresholds-constants-26e.csv
-"""
+"""CRA T4127 rate tables — 123rd edition effective July 1, 2026."""
 
 from __future__ import annotations
 
@@ -34,7 +30,6 @@ FEDERAL_BRACKETS = TaxBracketTable(
     ),
 )
 
-# Table 8.9 — federal claim code 1 (maximum BPAF), Option 1.
 FEDERAL_CLAIM_CODE_TC: dict[int, Decimal] = {
     0: Decimal("0"),
     1: Decimal("16452"),
@@ -53,16 +48,28 @@ FEDERAL_LOWEST_RATE = Decimal("0.14")
 CANADA_EMPLOYMENT_AMOUNT = Decimal("1501")
 QC_FEDERAL_ABATEMENT_RATE = Decimal("0.165")
 
+CPP_BASIC_EXEMPTION = Decimal("3500")
+CPP_YMPE = Decimal("74600")
+CPP_YAMPE = Decimal("85000")
 CPP_TOTAL_RATE = Decimal("0.0595")
 CPP_BASE_RATE = Decimal("0.0495")
+CPP_MAX_TOTAL_CONTRIBUTION = Decimal("4230.45")
 CPP_MAX_BASE_CONTRIBUTION = Decimal("3519.45")
+CPP2_MAX_CONTRIBUTION = Decimal("416.00")
+CPP2_RATE = Decimal("0.04")
 
 QPP_TOTAL_RATE = Decimal("0.0630")
 QPP_BASE_RATE = Decimal("0.0530")
+QPP_MAX_TOTAL_CONTRIBUTION = Decimal("4479.30")
 QPP_MAX_BASE_CONTRIBUTION = Decimal("3768.30")
 
+EI_MAX_INSURABLE_EARNINGS = Decimal("68900")
+EI_RATE = Decimal("0.0163")
 EI_MAX_PREMIUM = Decimal("1123.07")
+EI_RATE_QC = Decimal("0.0130")
 EI_MAX_PREMIUM_QC = Decimal("895.70")
+
+QPIP_MAX_INSURABLE_EARNINGS = Decimal("103000")
 QPIP_RATE = Decimal("0.0043")
 QPIP_MAX_PREMIUM = Decimal("442.90")
 

@@ -33,6 +33,12 @@ def validate_payroll_xml(xml_text: str) -> PayrollPayload:
     def money(xpath: str) -> Decimal:
         return Decimal(text(xpath))
 
+    def optional_money(xpath: str) -> Decimal:
+        node = root.find(xpath, namespaces=ns)
+        if node is None or node.text is None:
+            return Decimal("0.00")
+        return Decimal(node.text.strip())
+
     return PayrollPayload(
         employer=Employer(name=text("p:employer/p:name")),
         employee=Employee(
@@ -49,6 +55,7 @@ def validate_payroll_xml(xml_text: str) -> PayrollPayload:
             cpp=money("p:deductions/p:cpp"),
             ei=money("p:deductions/p:ei"),
             incomeTax=money("p:deductions/p:incomeTax"),
+            qpip=optional_money("p:deductions/p:qpip"),
         ),
         netPay=money("p:netPay"),
     )

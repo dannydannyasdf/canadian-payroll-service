@@ -46,6 +46,7 @@ class Deductions(BaseModel):
     cpp: Decimal
     ei: Decimal
     income_tax: Decimal = Field(alias="incomeTax")
+    qpip: Decimal = Field(default=Decimal("0"), ge=0)
 
 
 class PayrollPayload(BaseModel):
@@ -75,11 +76,12 @@ class PayrollPayload(BaseModel):
             self.earnings.gross_pay
             - self.deductions.cpp
             - self.deductions.ei
+            - self.deductions.qpip
             - self.deductions.income_tax
         )
         if self.net_pay != expected_net:
             raise ValueError(
-                f"netPay must equal grossPay minus CPP, EI, and incomeTax "
+                f"netPay must equal grossPay minus CPP, EI, QPIP, and incomeTax "
                 f"(expected {expected_net}, got {self.net_pay})"
             )
         return self
@@ -96,6 +98,7 @@ class PayrollPayload(BaseModel):
             "gross_pay": self.earnings.gross_pay,
             "cpp": self.deductions.cpp,
             "ei": self.deductions.ei,
+            "qpip": self.deductions.qpip,
             "income_tax": self.deductions.income_tax,
             "net_pay": self.net_pay,
         }

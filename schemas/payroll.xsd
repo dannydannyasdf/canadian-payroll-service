@@ -49,6 +49,7 @@
       <xs:element name="cpp" type="MoneyType"/>
       <xs:element name="ei" type="MoneyType"/>
       <xs:element name="incomeTax" type="MoneyType"/>
+      <xs:element name="qpip" type="MoneyType" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

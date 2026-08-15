@@ -23,6 +23,8 @@ Official CRA guides for payroll deduction calculations. Place PDFs in this folde
 
 ## What is implemented
 
+- **CPP / QPP and EI** — T4127 Chapters 6–7 (salary/wages; YTD-aware when `ytd*` fields supplied)
+- **QPIP** — Québec premium returned separately (included in `netPay` calculation)
 - **Federal income tax** — T4127 Option 1, Steps 1–3 and Step 6 (federal `T1 / P`)
 - **Québec employees** — QPP/QPIP federal credits (`K2Q`) and 16.5% federal abatement
 - **Claim codes** — federal TD1 codes 0–10 (default code 1 = maximum BPAF)
