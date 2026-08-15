@@ -41,8 +41,12 @@
 - Slice 3: Optional `employer.id` / `employee.id` on pay stub; inactive → 403; demo dropdowns
 
 **Future work (Phase 7+):**
+- Provincial/territorial income tax (`T2`) via T4127 for non-Québec provinces
+- Québec **provincial** income tax (Revenu Québec formulas — separate from T4127)
+- CPP, EI, and QPIP contribution calculation (currently accepted as inputs)
+- T4127 Option 2 cumulative averaging; bonuses and non-periodic payments
 - Amended / cancel e-file report types (CRA `A`/`C`, RQ `A`/`D`) — currently Original only
-- Richer tax box mappings (federal vs Québec income tax split, QPP/QPIP caps, pensionable/insurable ceilings)
+- Richer tax box mappings (split stored federal vs provincial amounts on T4 / Relevé 1)
 - RQ certification test-case submission (IN-800 §3) for a real `RQ-##-##-###` number
 - PDF authorization number overlay (`FS######`, IN-412 §3.14) and 2D barcode on RL-1 copy 1 (IN-412 §3.16)
 - RLZ-1.S employer summary form for paper / Mon Dossier paths
@@ -52,6 +56,8 @@
 - Automated pytest suite for SIN, CRA/RQ e-file XML, YTD, PDF overlay
 - IN-800 compliance: `NoId` uses `PAYROLL_RQ_EMPLOYER_ID` (not NEQ); modulus-7 `NoReleve` allocation with DB sequence
 - `docs/rq/` reference folder for IN-412-V and IN-800-V guides
+- **Federal income tax calculator** — CRA T4127 Option 1 (July 2026 rates); `POST /payroll/calculate-deductions`
+- `docs/CRA/` reference folder for T4127 Payroll Deductions Formulas
 
 ---
 
@@ -115,11 +121,15 @@ canadian-payroll-service/
 │   │   ├── stub_archive_service.py
 │   │   ├── billing_service.py
 │   │   └── xml_validator.py
-│   ├── tax/box_mapping.py      # YTD → T4 boxes & Relevé 1 boxes
+│   ├── tax/
+│   │   ├── box_mapping.py      # YTD → T4 boxes & Relevé 1 boxes
+│   │   └── t4127/              # CRA payroll deduction formulas (federal tax)
 │   ├── templates/              # Jinja2 HTML for PDFs + demo.html
 │   └── assets/forms/           # t4-25e.pdf, releve1-2026-10.pdf (gitignored; copy locally)
 ├── alembic/versions/           # 001 baseline … 005 rq_releve_number
-├── docs/rq/                    # IN-412-V / IN-800-V reference guides (PDFs gitignored)
+├── docs/
+│   ├── cra/                    # T4127 Payroll Deductions Formulas (PDF gitignored)
+│   └── rq/                     # IN-412-V / IN-800-V reference guides (PDFs gitignored)
 ├── schemas/
 │   ├── payroll.xsd             # Ingress contract
 │   ├── cra/                    # Official CRA XSD subset + t4_efile_preview.xsd
@@ -146,6 +156,7 @@ canadian-payroll-service/
 | `GET /payroll/tax-filing/cra/schema-status` | CRA XSD inventory |
 | `GET /payroll/tax-filing/rq?taxYear=[&official=]` | Bulk Relevé 1 e-file (QC employees only) |
 | `GET /payroll/tax-filing/rq/schema-status` | RQ XSD inventory |
+| `POST /payroll/calculate-deductions` | Federal income tax (CRA T4127 Option 1, July 2026) |
 | `POST/GET/PATCH /payroll/employers[/{id}]` | Client employer onboarding |
 | `POST/GET/PATCH /payroll/employers/{id}/employees[/{employee_id}]` | Employee onboarding |
 | `GET /payroll/employees?employerId=` | List employees (optional filter) |

@@ -13,10 +13,12 @@ from app.exceptions import (
     PayrollIdentityMismatchError,
 )
 from app.models.cumulative import PayStubResponse
+from app.models.deductions import CalculateDeductionsRequest, CalculateDeductionsResponse
 from app.models.employee import EmployeeSummary
 from app.models.payroll import PayrollPayload
 from app.models.tax_slip import Releve1SlipPreview, T4SlipPreview
 from app.services.billing_service import record_billing_event
+from app.services.payroll_deductions_service import calculate_payroll_deductions
 from app.services.pdf_generator import render_pay_stub_archive_pdf, render_pay_stub_pdf, render_releve1_pdf, render_t4_pdf
 from app.services.stub_archive_service import (
     EmployeeNotFoundError,
@@ -50,6 +52,15 @@ KONG_CONSUMER_HEADER = "x-consumer-username"
 
 def _consumer_from_request(request: Request) -> str | None:
     return request.headers.get(KONG_CONSUMER_HEADER)
+
+
+@router.post("/calculate-deductions", response_model=CalculateDeductionsResponse)
+def calculate_deductions(payload: CalculateDeductionsRequest) -> CalculateDeductionsResponse:
+    """Calculate federal income tax using CRA T4127 Option 1 (July 2026 rates)."""
+    try:
+        return calculate_payroll_deductions(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 def _pay_stub_response(payload: PayrollPayload, db: Session, request: Request) -> PayStubResponse:
