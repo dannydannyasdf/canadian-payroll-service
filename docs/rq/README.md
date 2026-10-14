@@ -4,6 +4,7 @@ Official RQ guides for RL-slip software developers and transmitters. Place the P
 
 | File | Purpose |
 |------|---------|
+| `tp-1015-f-v-2026-01.pdf` | **Formulas to Calculate Source Deductions and Contributions** — Québec provincial income tax, QPP, QPIP |
 | `IN-412-V(2025-10).pdf` | **RL slip PDF requirements** — authorization number (FS######), 2D barcode, layout, copy instructions |
 | `IN-800-V(2025-10).pdf` | **XML e-file requirements** — certification process, `Transmission` structure, data rules, NoReleve modulus-7 |
 
@@ -13,6 +14,7 @@ Official RQ guides for RL-slip software developers and transmitters. Place the P
 |------|------|
 | `schemas/rq/` | Official XSD package (`Transmission.xsd` is the validation root) |
 | `schemas/rq/read-me.txt` | XML examples and namespace notes |
+| `app/tax/rq/provincial.py` | TP-1015.F-V Option 1 Québec provincial income tax calculator |
 | `app/services/rq_efile_service.py` | Official + preview XML generation |
 | `app/services/releve1_official_form.py` | RL-1 PDF overlay on official blank form |
 | `app/rq_releve_number.py` | Modulus-7 check digit for `NoReleve` (IN-800 Schedule 1) |

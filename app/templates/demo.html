@@ -114,7 +114,7 @@
       margin-bottom: 6px;
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%;
       font-size: 16px;
       padding: 12px;
@@ -122,9 +122,10 @@
       border-radius: 10px;
       margin-bottom: 12px;
       background: #fff;
+      font-family: inherit;
     }
 
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       outline: 2px solid var(--accent);
       outline-offset: 1px;
     }
@@ -309,23 +310,37 @@
 
       <div class="card">
         <h2>Pay period</h2>
+        <p class="field-hint">Dates use YYYY/MM/DD (e.g. 2026/01/10).</p>
         <div class="row">
           <div>
             <label for="start-date">Start</label>
-            <input id="start-date" name="startDate" type="date" required>
+            <input id="start-date" name="startDate" type="text" placeholder="YYYY/MM/DD" pattern="\d{4}/\d{2}/\d{2}" inputmode="numeric" required>
           </div>
           <div>
             <label for="end-date">End</label>
-            <input id="end-date" name="endDate" type="date" required>
+            <input id="end-date" name="endDate" type="text" placeholder="YYYY/MM/DD" pattern="\d{4}/\d{2}/\d{2}" inputmode="numeric" required>
           </div>
         </div>
         <label for="pay-date">Pay date</label>
-        <input id="pay-date" name="payDate" type="date" required>
+        <input id="pay-date" name="payDate" type="text" placeholder="YYYY/MM/DD" pattern="\d{4}/\d{2}/\d{2}" inputmode="numeric" required>
       </div>
 
       <div class="card">
         <h2>Amounts (CAD)</h2>
         <p class="field-hint">CPP/QPP, EI, QPIP (QC employment), and federal tax use CRA T4127 (July 2026). Province follows employment province, not home address.</p>
+        <div class="row">
+          <div>
+            <label for="amount-hours">Hour(s) worked</label>
+            <input id="amount-hours" name="hoursWorked" inputmode="decimal" data-update-gross>
+          </div>
+          <div>
+            <label for="amount-hourly-rate">Hourly rate</label>
+            <input id="amount-hourly-rate" name="hourlyRate" inputmode="decimal" data-update-gross>
+          </div>
+        </div>
+        <label for="amount-advance">Advance</label>
+        <input id="amount-advance" name="advance" inputmode="decimal" data-update-gross value="0.00">
+        <p class="field-hint">Enter hours and rate to calculate gross pay, or edit gross pay directly. Advance is added to gross pay.</p>
         <label for="amount-gross">Gross pay</label>
         <input id="amount-gross" data-recalc-deductions name="grossPay" inputmode="decimal" required>
 
@@ -346,11 +361,27 @@
         </div>
 
         <label for="amount-income-tax">Income tax (federal)</label>
-        <input id="amount-income-tax" name="incomeTax" inputmode="decimal" readonly required>
+        <input id="amount-income-tax" name="federalIncomeTax" inputmode="decimal" readonly required>
+
+        <div id="provincial-tax-row" hidden>
+          <label for="amount-provincial-tax">Income tax (Québec)</label>
+          <input id="amount-provincial-tax" name="provincialIncomeTax" inputmode="decimal" readonly>
+        </div>
 
         <label for="amount-net">Net pay (calculated)</label>
-        <p class="field-hint">Gross pay minus CPP/QPP, EI, QPIP (if QC), and federal income tax.</p>
+        <p class="field-hint">Gross pay minus CPP/QPP, EI, QPIP (if QC), federal income tax, and Québec income tax (if QC).</p>
         <input id="amount-net" name="netPay" inputmode="decimal" readonly required>
+      </div>
+
+      <div class="card">
+        <h2>Comments</h2>
+        <label for="field-comments">Comments</label>
+        <p class="field-hint">Shown on the employee pay stub PDF.</p>
+        <textarea id="field-comments" name="comments" rows="3" maxlength="2000"></textarea>
+
+        <label for="field-comments2">Comments 2 (private)</label>
+        <p class="field-hint">Employer-only notes — stored with the pay period but not printed on the pay stub.</p>
+        <textarea id="field-comments2" name="comments2" rows="3" maxlength="2000"></textarea>
       </div>
 
       <button type="submit" id="submit-btn">Generate PDF</button>
@@ -396,12 +427,19 @@
     const downloadPdf = document.getElementById("download-pdf");
     const pdfFrame = document.getElementById("pdf-frame");
     const fieldGross = document.getElementById("amount-gross");
+    const fieldHours = document.getElementById("amount-hours");
+    const fieldHourlyRate = document.getElementById("amount-hourly-rate");
+    const fieldAdvance = document.getElementById("amount-advance");
     const fieldCpp = document.getElementById("amount-cpp");
     const fieldEi = document.getElementById("amount-ei");
     const fieldQpip = document.getElementById("amount-qpip");
     const qpipRow = document.getElementById("qpip-row");
     const fieldIncomeTax = document.getElementById("amount-income-tax");
+    const fieldProvincialTax = document.getElementById("amount-provincial-tax");
+    const provincialTaxRow = document.getElementById("provincial-tax-row");
     const fieldNet = document.getElementById("amount-net");
+    const fieldComments = document.getElementById("field-comments");
+    const fieldComments2 = document.getElementById("field-comments2");
 
     let pdfObjectUrl = null;
     let lastEmployeeId = null;
@@ -411,6 +449,7 @@
     let deductionsTimer = null;
     let deductionsRequestId = 0;
     let lastCumulative = null;
+    let lastAdvance = 0;
 
     async function loadEmployers() {
       employerSelect.innerHTML = '<option value="">— Loading employers… —</option>';
@@ -472,11 +511,17 @@
     function syncEmployerSelectToName() {
       const employerName = document.getElementById("employer-name").value.trim();
       const match = registeredEmployers.find((employer) => employer.name === employerName);
-      employerSelect.value = match ? String(match.id) : "";
-      if (match) {
-        loadEmployeesForEmployer(match.id);
-      } else {
-        loadEmployeesForEmployer(null);
+      const nextValue = match ? String(match.id) : "";
+      const employerChanged = employerSelect.value !== nextValue;
+      employerSelect.value = nextValue;
+      if (employerChanged) {
+        lastEmployeeId = null;
+        employeeSelect.value = "";
+        if (match) {
+          loadEmployeesForEmployer(match.id);
+        } else {
+          loadEmployeesForEmployer(null);
+        }
       }
     }
 
@@ -484,6 +529,7 @@
       const sin = document.getElementById("employee-sin").value.trim();
       const match = registeredEmployees.find((employee) => employee.sin === sin);
       employeeSelect.value = match ? String(match.id) : "";
+      lastEmployeeId = null;
     }
 
     function applyEmployerSelection() {
@@ -528,9 +574,56 @@
       return Number.isFinite(amount) ? amount : 0;
     }
 
+    function isoDateToDisplay(iso) {
+      if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+        return "";
+      }
+      const [year, month, day] = iso.split("-");
+      return `${year}/${month}/${day}`;
+    }
+
+    function displayDateToIso(display) {
+      const value = display.trim();
+      if (!/^\d{4}\/\d{2}\/\d{2}$/.test(value)) {
+        return null;
+      }
+      const [year, month, day] = value.split("/");
+      const iso = `${year}-${month}-${day}`;
+      const parsed = new Date(`${iso}T00:00:00`);
+      if (Number.isNaN(parsed.getTime())) {
+        return null;
+      }
+      if (
+        parsed.getFullYear() !== Number(year)
+        || parsed.getMonth() + 1 !== Number(month)
+        || parsed.getDate() !== Number(day)
+      ) {
+        return null;
+      }
+      return iso;
+    }
+
+    function readDateValue(elementId) {
+      return displayDateToIso(document.getElementById(elementId).value);
+    }
+
+    function setDateValue(elementId, iso) {
+      document.getElementById(elementId).value = isoDateToDisplay(iso);
+    }
+
+    function readPayPeriodDates() {
+      const startDate = readDateValue("start-date");
+      const endDate = readDateValue("end-date");
+      const payDate = readDateValue("pay-date");
+      if (!startDate || !endDate || !payDate) {
+        return null;
+      }
+      return { startDate, endDate, payDate };
+    }
+
     function payPeriodsPerYear() {
-      const startValue = document.getElementById("start-date").value;
-      const endValue = document.getElementById("end-date").value;
+      const startValue = readDateValue("start-date");
+      const endValue = readDateValue("end-date");
       if (!startValue || !endValue) {
         return 52;
       }
@@ -571,10 +664,12 @@
     }
 
     function updateQpipVisibility(province) {
-      const showQpip = province === "QC";
-      qpipRow.hidden = !showQpip;
-      if (!showQpip) {
+      const showQc = province === "QC";
+      qpipRow.hidden = !showQc;
+      provincialTaxRow.hidden = !showQc;
+      if (!showQc) {
         fieldQpip.value = "0.00";
+        fieldProvincialTax.value = "0.00";
       }
     }
 
@@ -584,6 +679,7 @@
         fieldCpp.value = "";
         fieldEi.value = "";
         fieldIncomeTax.value = "";
+        fieldProvincialTax.value = "";
         fieldNet.value = "";
         fieldQpip.value = "";
         return;
@@ -633,7 +729,8 @@
 
         fieldCpp.value = data.cpp;
         fieldEi.value = data.ei;
-        fieldIncomeTax.value = data.incomeTax;
+        fieldIncomeTax.value = data.federalIncomeTax;
+        fieldProvincialTax.value = data.provincialIncomeTax || "0.00";
         fieldQpip.value = data.qpip || "0.00";
         fieldNet.value = data.netPay;
       } catch (err) {
@@ -650,13 +747,35 @@
       }, 250);
     }
 
+    function updateGrossFromEarningsInputs() {
+      const hours = parseAmount(fieldHours.value);
+      const rate = parseAmount(fieldHourlyRate.value);
+      const advance = parseAmount(fieldAdvance.value);
+
+      if (hours > 0 && rate > 0) {
+        fieldGross.value = (hours * rate + advance).toFixed(2);
+        lastAdvance = advance;
+        scheduleRecalcDeductions();
+        return;
+      }
+
+      const grossWithoutAdvance = parseAmount(fieldGross.value) - lastAdvance;
+      const newGross = grossWithoutAdvance + advance;
+      lastAdvance = advance;
+      if (newGross >= 0) {
+        fieldGross.value = newGross.toFixed(2);
+        scheduleRecalcDeductions();
+      }
+    }
+
     function recalcNetPay() {
       const gross = parseAmount(fieldGross.value);
       const cpp = parseAmount(fieldCpp.value);
       const ei = parseAmount(fieldEi.value);
       const qpip = parseAmount(fieldQpip.value);
-      const tax = parseAmount(fieldIncomeTax.value);
-      const net = Math.max(0, gross - cpp - ei - qpip - tax);
+      const federalTax = parseAmount(fieldIncomeTax.value);
+      const provincialTax = parseAmount(fieldProvincialTax.value);
+      const net = Math.max(0, gross - cpp - ei - qpip - federalTax - provincialTax);
       fieldNet.value = net.toFixed(2);
     }
 
@@ -664,38 +783,58 @@
       document.getElementById("employer-name").value = sample.employer.name;
       document.getElementById("employee-name").value = sample.employee.name;
       document.getElementById("employee-sin").value = sample.employee.sin;
-      document.getElementById("start-date").value = sample.payPeriod.startDate;
-      document.getElementById("end-date").value = sample.payPeriod.endDate;
-      document.getElementById("pay-date").value = sample.payPeriod.payDate;
+      setDateValue("start-date", sample.payPeriod.startDate);
+      setDateValue("end-date", sample.payPeriod.endDate);
+      setDateValue("pay-date", sample.payPeriod.payDate);
+      fieldHours.value = "";
+      fieldHourlyRate.value = "";
+      fieldAdvance.value = "0.00";
+      lastAdvance = 0;
       fieldGross.value = sample.earnings.grossPay;
+      fieldComments.value = sample.comments || "";
+      fieldComments2.value = sample.comments2 || "";
       fieldCpp.value = sample.deductions.cpp;
       fieldEi.value = sample.deductions.ei;
-      fieldIncomeTax.value = sample.deductions.incomeTax;
+      fieldIncomeTax.value = sample.deductions.federalIncomeTax || sample.deductions.incomeTax;
+      fieldProvincialTax.value = sample.deductions.provincialIncomeTax || "0.00";
       scheduleRecalcDeductions();
       syncEmployerSelectToName();
     }
 
     function buildPayload() {
+      syncEmployerSelectToName();
+      const payPeriod = readPayPeriodDates();
+      if (!payPeriod) {
+        throw new Error("Pay period dates must use YYYY/MM/DD format (e.g. 2026/01/10).");
+      }
       const payload = {
         employer: { name: document.getElementById("employer-name").value.trim() },
         employee: {
           name: document.getElementById("employee-name").value.trim(),
           sin: document.getElementById("employee-sin").value.trim(),
         },
-        payPeriod: {
-          startDate: document.getElementById("start-date").value,
-          endDate: document.getElementById("end-date").value,
-          payDate: document.getElementById("pay-date").value,
-        },
+        payPeriod,
         earnings: { grossPay: fieldGross.value.trim() },
         deductions: {
           cpp: fieldCpp.value.trim(),
           ei: fieldEi.value.trim(),
-          incomeTax: fieldIncomeTax.value.trim(),
+          federalIncomeTax: fieldIncomeTax.value.trim(),
+          provincialIncomeTax: fieldProvincialTax.value.trim() || "0.00",
+          incomeTax: (
+            parseAmount(fieldIncomeTax.value) + parseAmount(fieldProvincialTax.value)
+          ).toFixed(2),
           qpip: fieldQpip.value.trim() || "0.00",
         },
         netPay: fieldNet.value.trim(),
       };
+      const comments = fieldComments.value.trim();
+      const comments2 = fieldComments2.value.trim();
+      if (comments) {
+        payload.comments = comments;
+      }
+      if (comments2) {
+        payload.comments2 = comments2;
+      }
       if (employerSelect.value) {
         payload.employer.id = Number.parseInt(employerSelect.value, 10);
       }
@@ -706,20 +845,30 @@
     }
 
     function taxYearFromForm() {
-      const payDate = document.getElementById("pay-date").value;
+      const payDate = readDateValue("pay-date");
       return payDate ? Number.parseInt(payDate.slice(0, 4), 10) : new Date().getFullYear();
     }
 
     async function resolveEmployeeId() {
-      if (lastEmployeeId) {
-        return lastEmployeeId;
-      }
-      if (employeeSelect.value) {
-        return Number.parseInt(employeeSelect.value, 10);
+      syncEmployerSelectToName();
+
+      const sin = document.getElementById("employee-sin").value.trim();
+      if (!sin) {
+        throw new Error("Employee SIN is required.");
       }
 
+      const employerName = document.getElementById("employer-name").value.trim();
       const employerId = employerSelect.value ? Number.parseInt(employerSelect.value, 10) : null;
-      const sin = document.getElementById("employee-sin").value.trim();
+
+      if (employeeSelect.value) {
+        const selected = registeredEmployees.find(
+          (employee) => String(employee.id) === employeeSelect.value,
+        );
+        if (selected && selected.sin === sin) {
+          return selected.id;
+        }
+      }
+
       const query = employerId ? `?employerId=${employerId}` : "";
       const response = await fetch(`/payroll/employees${query}`, {
         headers: { apikey: apiKey },
@@ -730,12 +879,23 @@
         throw new Error(typeof data.detail === "string" ? data.detail : "Could not look up employee.");
       }
 
-      const match = data.find((employee) => employee.sin === sin);
-      if (!match) {
-        throw new Error("No employee found for this SIN. Generate at least one pay stub first.");
+      let matches = data.filter((employee) => employee.sin === sin);
+      if (employerName) {
+        const byEmployer = matches.filter((employee) => employee.employerName === employerName);
+        if (byEmployer.length) {
+          matches = byEmployer;
+        }
       }
 
-      return match.id;
+      if (matches.length === 1) {
+        return matches[0].id;
+      }
+      if (matches.length > 1) {
+        throw new Error("Multiple employees match this SIN. Select a registered employee.");
+      }
+      throw new Error(
+        "No employee found for this employer and SIN. Generate at least one pay stub first.",
+      );
     }
 
     async function downloadAllPeriods() {
@@ -781,7 +941,7 @@
 
     async function downloadTaxSlipPdf(button, config) {
       clearMessage();
-      const { path, label, filePrefix, buttons, idleText } = config;
+      const { path, label, filePrefix, buttons, idleText, fileExtension = "pdf" } = config;
       buttons.forEach((btn) => {
         btn.disabled = true;
         btn.textContent = "Downloading…";
@@ -811,7 +971,7 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `${filePrefix}-${employeeId}-${taxYear}.pdf`;
+        link.download = `${filePrefix}-${employeeId}-${taxYear}.${fileExtension}`;
         link.click();
         URL.revokeObjectURL(url);
         showMessage(`Downloaded ${label} preview for ${taxYear}.`, "success");
@@ -825,7 +985,7 @@
       }
     }
 
-    async function downloadFilingXml(button, { path, label, filePrefix, idleText }) {
+    async function downloadFilingXml(button, { path, label, filePrefix, idleText, successMessage }) {
       clearMessage();
       const buttons = [button];
       buttons.forEach((btn) => {
@@ -859,7 +1019,10 @@
         link.download = `${filePrefix}-${taxYear}.xml`;
         link.click();
         URL.revokeObjectURL(url);
-        showMessage(`Downloaded ${label} preview for ${taxYear}.`, "success");
+        const message = successMessage
+          ? successMessage(taxYear)
+          : `Downloaded ${label} preview for ${taxYear}.`;
+        showMessage(message, "success");
       } catch (err) {
         showMessage(err.message, "error");
       } finally {
@@ -904,7 +1067,14 @@
 
     ["input", "change", "blur"].forEach((eventName) => {
       form.addEventListener(eventName, (event) => {
-        if (event.target instanceof HTMLInputElement && event.target.hasAttribute("data-recalc-deductions")) {
+        if (!(event.target instanceof HTMLInputElement)) {
+          return;
+        }
+        if (event.target.hasAttribute("data-update-gross")) {
+          updateGrossFromEarningsInputs();
+          return;
+        }
+        if (event.target.hasAttribute("data-recalc-deductions")) {
           scheduleRecalcDeductions();
         }
       });
@@ -948,6 +1118,8 @@
       label: "RQ XML",
       filePrefix: "rq-releve1-filing",
       idleText: "Download RQ XML",
+      successMessage: (taxYear) =>
+        `Downloaded RQ XML for all Québec employees with pay data in ${taxYear}.`,
     }));
 
     form.addEventListener("submit", async (event) => {
@@ -957,6 +1129,14 @@
       submitBtn.disabled = true;
       submitBtn.textContent = "Generating…";
 
+      let payload;
+      try {
+        payload = buildPayload();
+      } catch (err) {
+        showMessage(err.message, "error");
+        return;
+      }
+
       try {
         const response = await fetch("/payroll/pay-stub", {
           method: "POST",
@@ -964,7 +1144,7 @@
             "Content-Type": "application/json",
             "apikey": apiKey,
           },
-          body: JSON.stringify(buildPayload()),
+          body: JSON.stringify(payload),
         });
 
         const data = await response.json();

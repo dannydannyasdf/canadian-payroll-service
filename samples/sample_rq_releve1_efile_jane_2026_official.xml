@@ -17,17 +17,17 @@
     <Informatique>
       <Nom>Danny Majerovich</Nom>
       <IndRegional>514</IndRegional>
-      <Tel>555-0100</Tel>
+      <Tel>392-0015</Tel>
     </Informatique>
     <Comptabilite>
       <Nom>Danny Majerovich</Nom>
       <IndRegional>514</IndRegional>
-      <Tel>555-0100</Tel>
+      <Tel>392-0015</Tel>
     </Comptabilite>
     <NoCertification>RQ-26-01-010</NoCertification>
     <NomLogiciel>Canadian Payroll Service</NomLogiciel>
     <VersionLogiciel>2026-01</VersionLogiciel>
-    <CourrielResponsable>payroll@gamma.example</CourrielResponsable>
+    <CourrielResponsable>dannym.asdf@gmail.com</CourrielResponsable>
     <IdPartenaireReleves>0000000000000271</IdPartenaireReleves>
     <IdProduitReleves>0000000000000271</IdProduitReleves>
   </P>

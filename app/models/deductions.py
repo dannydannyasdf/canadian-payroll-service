@@ -35,6 +35,13 @@ class CalculateDeductionsRequest(BaseModel):
         le=10,
         description="Federal TD1 claim code (0–10). Default 1 = maximum BPAF.",
     )
+    provincial_claim_code: int = Field(
+        alias="provincialClaimCode",
+        default=1,
+        ge=0,
+        le=10,
+        description="Québec TP-1015.3-V deduction code (0–10). Used when province is QC.",
+    )
     insurable_earnings: Decimal | None = Field(
         default=None,
         alias="insurableEarnings",
@@ -91,8 +98,18 @@ class FederalTaxBreakdown(BaseModel):
     provincial_income_tax: Decimal | None = Field(
         default=None,
         alias="provincialIncomeTax",
-        description="Not calculated yet — use Revenu Québec formulas for QC provincial tax.",
+        description="Québec provincial income tax for the period (QC only).",
     )
+
+
+class QuebecTaxBreakdown(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    annual_taxable_income: Decimal = Field(alias="annualTaxableIncome")
+    annual_basic_quebec_tax: Decimal = Field(alias="annualBasicQuebecTax")
+    annual_quebec_tax: Decimal = Field(alias="annualQuebecTax")
+    provincial_income_tax: Decimal = Field(alias="provincialIncomeTax")
+    method: str = "TP-1015.F-V Option 1 (2026-01)"
 
 
 class CalculateDeductionsResponse(BaseModel):
@@ -102,9 +119,16 @@ class CalculateDeductionsResponse(BaseModel):
     cpp2: Decimal = Field(description="Second additional CPP/QPP contribution (C2).")
     ei: Decimal
     qpip: Decimal = Field(description="Québec Parental Insurance Plan premium (QC only).")
+    federal_income_tax: Decimal = Field(alias="federalIncomeTax")
+    provincial_income_tax: Decimal = Field(
+        default=Decimal("0"),
+        alias="provincialIncomeTax",
+        description="Québec provincial income tax for the period (QC only).",
+    )
     income_tax: Decimal = Field(
         alias="incomeTax",
-        description="Federal income tax for the period (provincial tax not included yet).",
+        description="Total income tax withheld for the period (federal + provincial).",
     )
     net_pay: Decimal = Field(alias="netPay")
     federal: FederalTaxBreakdown
+    quebec: QuebecTaxBreakdown | None = None

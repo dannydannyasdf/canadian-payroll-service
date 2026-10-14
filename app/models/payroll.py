@@ -46,7 +46,31 @@ class Deductions(BaseModel):
     cpp: Decimal
     ei: Decimal
     income_tax: Decimal = Field(alias="incomeTax")
+    federal_income_tax: Decimal | None = Field(default=None, alias="federalIncomeTax", ge=0)
+    provincial_income_tax: Decimal | None = Field(default=None, alias="provincialIncomeTax", ge=0)
     qpip: Decimal = Field(default=Decimal("0"), ge=0)
+
+    @model_validator(mode="after")
+    def resolve_income_tax_split(self) -> "Deductions":
+        if self.federal_income_tax is not None or self.provincial_income_tax is not None:
+            federal = self.federal_income_tax or Decimal("0")
+            provincial = self.provincial_income_tax or Decimal("0")
+            expected_total = federal + provincial
+            if self.income_tax != expected_total:
+                raise ValueError(
+                    f"incomeTax must equal federalIncomeTax plus provincialIncomeTax "
+                    f"(expected {expected_total}, got {self.income_tax})"
+                )
+            self.federal_income_tax = federal
+            self.provincial_income_tax = provincial
+        else:
+            self.federal_income_tax = self.income_tax
+            self.provincial_income_tax = Decimal("0")
+        return self
+
+    @property
+    def total_income_tax(self) -> Decimal:
+        return self.federal_income_tax + self.provincial_income_tax
 
 
 class PayrollPayload(BaseModel):
@@ -62,6 +86,8 @@ class PayrollPayload(BaseModel):
     earnings: Earnings
     deductions: Deductions
     net_pay: Decimal = Field(alias="netPay")
+    comments: str | None = Field(default=None, max_length=2000)
+    comments2: str | None = Field(default=None, max_length=2000)
 
     @field_validator("net_pay")
     @classmethod
@@ -77,12 +103,13 @@ class PayrollPayload(BaseModel):
             - self.deductions.cpp
             - self.deductions.ei
             - self.deductions.qpip
-            - self.deductions.income_tax
+            - self.deductions.federal_income_tax
+            - self.deductions.provincial_income_tax
         )
         if self.net_pay != expected_net:
             raise ValueError(
-                f"netPay must equal grossPay minus CPP, EI, QPIP, and incomeTax "
-                f"(expected {expected_net}, got {self.net_pay})"
+                f"netPay must equal grossPay minus CPP, EI, QPIP, federal income tax, and "
+                f"provincial income tax (expected {expected_net}, got {self.net_pay})"
             )
         return self
 
@@ -99,6 +126,9 @@ class PayrollPayload(BaseModel):
             "cpp": self.deductions.cpp,
             "ei": self.deductions.ei,
             "qpip": self.deductions.qpip,
-            "income_tax": self.deductions.income_tax,
+            "federal_income_tax": self.deductions.federal_income_tax,
+            "provincial_income_tax": self.deductions.provincial_income_tax,
+            "income_tax": self.deductions.federal_income_tax,
             "net_pay": self.net_pay,
+            "comments": self.comments,
         }

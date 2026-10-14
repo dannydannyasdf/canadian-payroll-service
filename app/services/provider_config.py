@@ -25,8 +25,8 @@ PAYROLL_ACCOUNT_DISPLAY = os.environ.get("PAYROLL_CRA_PAYROLL_ACCOUNT", "10668 8
 DEFAULT_EMPLOYMENT_PROVINCE = os.environ.get("PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE", "ON")
 
 CONTACT_AREA = os.environ.get("PAYROLL_CRA_CONTACT_AREA", "514")
-CONTACT_PHONE = os.environ.get("PAYROLL_CRA_CONTACT_PHONE", "555-0100")
-CONTACT_EMAIL = os.environ.get("PAYROLL_CRA_CONTACT_EMAIL", "payroll@gamma.example")
+CONTACT_PHONE = os.environ.get("PAYROLL_CRA_CONTACT_PHONE", "392-0015")
+CONTACT_EMAIL = os.environ.get("PAYROLL_CRA_CONTACT_EMAIL", "dannym.asdf@gmail.com")
 
 
 def normalize_payroll_account(raw: str) -> str:

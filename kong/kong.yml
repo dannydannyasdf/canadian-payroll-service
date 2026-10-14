@@ -28,6 +28,7 @@ services:
           - /demo
           - /health
           - /images
+          - /favicon.ico
           - /docs
           - /openapi.json
           - /redoc

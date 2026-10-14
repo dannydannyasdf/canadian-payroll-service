@@ -27,7 +27,7 @@
     "A": "10000.00",
     "B": "576.00",
     "C": "164.00",
-    "E": "2200.00",
+    "E": "2285.42",
     "G": "10000.00",
     "I": "10000.00"
   },
@@ -42,7 +42,7 @@
   "disclaimers": [
     "Preview mapping only — not a filing-ready Relevé 1.",
     "Box B uses the stored CPP/QPP total from pay stubs.",
-    "Box E uses the full income tax total until provincial split exists."
+    "Box E uses stored Québec provincial income tax withheld."
   ],
   "status": "preview"
 }

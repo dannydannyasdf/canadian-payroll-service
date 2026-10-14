@@ -18,7 +18,10 @@
   <deductions>
     <cpp>288.00</cpp>
     <ei>82.00</ei>
-    <incomeTax>1100.00</incomeTax>
+    <federalIncomeTax>895.98</federalIncomeTax>
+    <provincialIncomeTax>1009.70</provincialIncomeTax>
+    <incomeTax>1905.68</incomeTax>
+    <qpip>21.50</qpip>
   </deductions>
-  <netPay>3530.00</netPay>
+  <netPay>2702.82</netPay>
 </payroll>

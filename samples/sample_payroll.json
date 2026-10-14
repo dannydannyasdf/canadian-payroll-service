@@ -17,7 +17,10 @@
   "deductions": {
     "cpp": "288.00",
     "ei": "82.00",
-    "incomeTax": "1100.00"
+    "federalIncomeTax": "895.98",
+    "provincialIncomeTax": "1009.70",
+    "incomeTax": "1905.68",
+    "qpip": "21.50"
   },
-  "netPay": "3530.00"
+  "netPay": "2702.82"
 }

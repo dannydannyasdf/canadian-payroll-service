@@ -14,8 +14,8 @@
     <CNTC>
       <cntc_nm>Danny Majerovich</cntc_nm>
       <cntc_area_cd>514</cntc_area_cd>
-      <cntc_phn_nbr>555-0100</cntc_phn_nbr>
-      <cntc_email_area>payroll@gamma.example</cntc_email_area>
+      <cntc_phn_nbr>392-0015</cntc_phn_nbr>
+      <cntc_email_area>dannym.asdf@gmail.com</cntc_email_area>
     </CNTC>
   </T619>
   <Return>
@@ -49,7 +49,7 @@
         <CNTC>
           <cntc_nm>Danny Majerovich</cntc_nm>
           <cntc_area_cd>514</cntc_area_cd>
-          <cntc_phn_nbr>555-0100</cntc_phn_nbr>
+          <cntc_phn_nbr>392-0015</cntc_phn_nbr>
         </CNTC>
         <tx_yr>2026</tx_yr>
         <slp_cnt>1</slp_cnt>

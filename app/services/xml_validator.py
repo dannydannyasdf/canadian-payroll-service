@@ -33,11 +33,22 @@ def validate_payroll_xml(xml_text: str) -> PayrollPayload:
     def money(xpath: str) -> Decimal:
         return Decimal(text(xpath))
 
-    def optional_money(xpath: str) -> Decimal:
+    def optional_money(xpath: str) -> Decimal | None:
         node = root.find(xpath, namespaces=ns)
         if node is None or node.text is None:
-            return Decimal("0.00")
+            return None
         return Decimal(node.text.strip())
+
+    def optional_text(xpath: str) -> str | None:
+        node = root.find(xpath, namespaces=ns)
+        if node is None or node.text is None:
+            return None
+        value = node.text.strip()
+        return value or None
+
+    federal_tax = optional_money("p:deductions/p:federalIncomeTax")
+    provincial_tax = optional_money("p:deductions/p:provincialIncomeTax")
+    total_tax = money("p:deductions/p:incomeTax")
 
     return PayrollPayload(
         employer=Employer(name=text("p:employer/p:name")),
@@ -54,8 +65,12 @@ def validate_payroll_xml(xml_text: str) -> PayrollPayload:
         deductions=Deductions(
             cpp=money("p:deductions/p:cpp"),
             ei=money("p:deductions/p:ei"),
-            incomeTax=money("p:deductions/p:incomeTax"),
-            qpip=optional_money("p:deductions/p:qpip"),
+            incomeTax=total_tax,
+            federalIncomeTax=federal_tax,
+            provincialIncomeTax=provincial_tax,
+            qpip=optional_money("p:deductions/p:qpip") or Decimal("0.00"),
         ),
         netPay=money("p:netPay"),
+        comments=optional_text("p:comments"),
+        comments2=optional_text("p:comments2"),
     )

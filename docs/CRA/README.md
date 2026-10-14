@@ -12,7 +12,7 @@ Official CRA guides for payroll deduction calculations. Place PDFs in this folde
 |------|------|
 | `app/tax/t4127/` | T4127 Option 1 federal tax calculator (July 2026 rates) |
 | `app/services/payroll_deductions_service.py` | Service wrapper |
-| `POST /payroll/calculate-deductions` | API endpoint for federal income tax |
+| `POST /payroll/calculate-deductions` | API endpoint for federal + Québec provincial income tax |
 
 ## Official CRA sources
 
@@ -26,14 +26,12 @@ Official CRA guides for payroll deduction calculations. Place PDFs in this folde
 - **CPP / QPP and EI** — T4127 Chapters 6–7 (salary/wages; YTD-aware when `ytd*` fields supplied)
 - **QPIP** — Québec premium returned separately (included in `netPay` calculation)
 - **Federal income tax** — T4127 Option 1, Steps 1–3 and Step 6 (federal `T1 / P`)
-- **Québec employees** — QPP/QPIP federal credits (`K2Q`) and 16.5% federal abatement
-- **Claim codes** — federal TD1 codes 0–10 (default code 1 = maximum BPAF)
+- **Québec employees** — QPP/QPIP federal credits (`K2Q`), 16.5% federal abatement, and TP-1015.F-V provincial tax (`app/tax/rq/provincial.py`)
+- **Claim codes** — federal TD1 codes 0–10 (default code 1 = maximum BPAF); Québec TP-1015.3-V codes 0–10 for provincial tax
 
 ## Not yet implemented
 
 - Provincial/territorial tax (`T2`) for non-Québec provinces
-- Québec **provincial** income tax (Revenu Québec — separate from T4127)
-- CPP, EI, and QPIP contribution calculation (inputs accepted; not derived)
 - Option 2 cumulative averaging
 - Bonuses and non-periodic payments (`TB` formula)
 - Dynamic BPAF based on net income (`NI`)

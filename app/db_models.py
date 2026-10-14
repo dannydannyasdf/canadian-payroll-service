@@ -1,7 +1,7 @@
 from datetime import date, datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, func, text
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -83,8 +83,12 @@ class PayPeriodRecord(Base):
     cpp: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     ei: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     qpip: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    federal_income_tax: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    provincial_income_tax: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     income_tax: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     net_pay: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    comments: Mapped[str | None] = mapped_column(Text, nullable=True)
+    comments2: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("(CURRENT_TIMESTAMP)"),
@@ -105,6 +109,8 @@ class YtdRecord(Base):
     cpp: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     ei: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     qpip: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    federal_income_tax: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    provincial_income_tax: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     income_tax: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     net_pay: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     last_period_start: Mapped[date | None] = mapped_column(Date, nullable=True)

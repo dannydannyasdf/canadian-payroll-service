@@ -31,13 +31,13 @@ T4_PREP_DISCLAIMERS: tuple[str, ...] = (
     "Preview mapping only — not a filing-ready T4.",
     "Boxes 24/26 assume all gross pay is pensionable and insurable.",
     "Quebec employers must map CPP to QPP on Relevé 1, not T4 box 16.",
-    "Income tax is not split into federal vs provincial amounts yet.",
+    "Box 22 uses stored federal income tax withheld.",
 )
 
 RELEVE1_PREP_DISCLAIMERS: tuple[str, ...] = (
     "Preview mapping only — not a filing-ready Relevé 1.",
     "Box B uses the stored CPP/QPP total from pay stubs.",
-    "Box E uses the full income tax total until provincial split exists.",
+    "Box E uses stored Québec provincial income tax withheld.",
 )
 
 
@@ -51,7 +51,7 @@ def map_ytd_to_t4_boxes(ytd: YtdRecord) -> dict[str, str]:
         "14": _money(ytd.gross_pay),
         "16": _money(ytd.cpp),
         "18": _money(ytd.ei),
-        "22": _money(ytd.income_tax),
+        "22": _money(ytd.federal_income_tax),
         "24": _money(ytd.gross_pay),
         "26": _money(ytd.gross_pay),
     }
@@ -63,7 +63,7 @@ def map_ytd_to_releve1_boxes(ytd: YtdRecord) -> dict[str, str]:
         "A": _money(ytd.gross_pay),
         "B": _money(ytd.cpp),
         "C": _money(ytd.ei),
-        "E": _money(ytd.income_tax),
+        "E": _money(ytd.provincial_income_tax),
         "G": _money(ytd.gross_pay),
         "I": _money(ytd.gross_pay),
     }

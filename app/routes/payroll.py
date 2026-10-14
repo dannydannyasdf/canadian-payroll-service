@@ -56,7 +56,7 @@ def _consumer_from_request(request: Request) -> str | None:
 
 @router.post("/calculate-deductions", response_model=CalculateDeductionsResponse)
 def calculate_deductions(payload: CalculateDeductionsRequest) -> CalculateDeductionsResponse:
-    """Calculate federal income tax using CRA T4127 Option 1 (July 2026 rates)."""
+    """Calculate payroll deductions using CRA T4127 and Revenu Québec TP-1015.F-V."""
     try:
         return calculate_payroll_deductions(payload)
     except ValueError as exc:

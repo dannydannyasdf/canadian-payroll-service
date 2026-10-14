@@ -26,7 +26,7 @@
     "14": "10000.00",
     "16": "576.00",
     "18": "164.00",
-    "22": "2200.00",
+    "22": "2260.58",
     "24": "10000.00",
     "26": "10000.00"
   },
@@ -42,7 +42,7 @@
     "Preview mapping only — not a filing-ready T4.",
     "Boxes 24/26 assume all gross pay is pensionable and insurable.",
     "Quebec employers must map CPP to QPP on Relevé 1, not T4 box 16.",
-    "Income tax is not split into federal vs provincial amounts yet."
+    "Box 22 uses stored federal income tax withheld."
   ],
   "status": "preview"
 }

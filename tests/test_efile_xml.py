@@ -42,3 +42,17 @@ def test_rq_preview_xml_validates() -> None:
     xml_text = build_and_validate_rq_submission_xml([make_releve1_slip()], 2026, official=False)
     assert "Submission" in xml_text
     assert "Releve1Slip" in xml_text
+
+
+def test_rq_preview_xml_groups_by_employer() -> None:
+    from app.services.provider_config import build_filing_employer_summary
+
+    slip_one = make_releve1_slip(employee_id=1)
+    slip_two = make_releve1_slip(employee_id=2).model_copy(
+        update={"employer": build_filing_employer_summary("Other Client Ltd.")}
+    )
+
+    xml_text = build_and_validate_rq_submission_xml([slip_one, slip_two], 2026, official=False)
+
+    assert xml_text.count("<Releve1Return>") == 2
+    assert xml_text.count("<slipCount>1</slipCount>") == 2

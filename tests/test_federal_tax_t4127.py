@@ -138,4 +138,6 @@ def test_calculate_deductions_api_model() -> None:
     assert response.cpp == Decimal("55.50")
     assert response.ei == Decimal("16.30")
     assert response.qpip == Decimal("0.00")
+    assert response.provincial_income_tax == Decimal("0.00")
+    assert response.income_tax == response.federal_income_tax
     assert response.net_pay == Decimal("1000.00") - response.cpp - response.ei - response.income_tax

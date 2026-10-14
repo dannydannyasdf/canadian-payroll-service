@@ -8,7 +8,7 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element name="Transmitter" type="TransmitterType"/>
-        <xs:element name="Releve1Return" type="Releve1ReturnType"/>
+        <xs:element name="Releve1Return" type="Releve1ReturnType" maxOccurs="unbounded"/>
       </xs:sequence>
       <xs:attribute name="taxYear" type="xs:gYear" use="required"/>
       <xs:attribute name="status" type="xs:string" use="required"/>

@@ -18,8 +18,11 @@ RELEVE1_FORM_PATH = Path(os.environ.get("PAYROLL_RELEVE1_FORM_PATH", DEFAULT_FOR
 if not RELEVE1_FORM_PATH.exists() and PROJECT_FORM_PATH.exists():
     RELEVE1_FORM_PATH = PROJECT_FORM_PATH
 
-# Measured from RL-1(2026-10)_Logiciel_copie2_projet.pdf (letter, 612x792).
-# Amount boxes shifted +14 pt (~0.5 cm) on x so cents align with form sub-columns.
+# Visual calibration against the official RL-1 blank (letter, 612x792).
+# Do not re-measure from the PDF and overwrite these: the blank already
+# prints the tax year (no overlay), amount boxes need +11.4 pt (~0.4 cm)
+# on x so cents sit in the form sub-columns, and the name/SIN/employer
+# block is ~8 pt (~3 mm) lower than the raw field boxes.
 _AMOUNT_X_OFFSET = 11.4
 
 FIELDS: dict[str, tuple[float, float, float, float]] = {

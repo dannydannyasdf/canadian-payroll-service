@@ -20,3 +20,10 @@
         <td class="amount">{{ income_tax | money }}</td>
         <td class="amount ytd">{{ ytd_income_tax | money }}</td>
       </tr>
+      {% if employment_province == "QC" %}
+      <tr>
+        <td>Income tax deducted (Québec)</td>
+        <td class="amount">{{ provincial_income_tax | money }}</td>
+        <td class="amount ytd">{{ ytd_provincial_income_tax | money }}</td>
+      </tr>
+      {% endif %}

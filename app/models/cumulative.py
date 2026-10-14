@@ -11,6 +11,8 @@ class CumulativeTotals(BaseModel):
     cpp: Decimal
     ei: Decimal
     qpip: Decimal = Decimal("0")
+    federal_income_tax: Decimal = Field(alias="federalIncomeTax")
+    provincial_income_tax: Decimal = Field(default=Decimal("0"), alias="provincialIncomeTax")
     income_tax: Decimal = Field(alias="incomeTax")
     net_pay: Decimal = Field(alias="netPay")
 
@@ -46,7 +48,9 @@ class CumulativeResponse(BaseModel):
             "ytd_cpp": self.totals.cpp,
             "ytd_ei": self.totals.ei,
             "ytd_qpip": self.totals.qpip,
-            "ytd_income_tax": self.totals.income_tax,
+            "ytd_federal_income_tax": self.totals.federal_income_tax,
+            "ytd_provincial_income_tax": self.totals.provincial_income_tax,
+            "ytd_income_tax": self.totals.federal_income_tax,
             "ytd_net_pay": self.totals.net_pay,
         }
 

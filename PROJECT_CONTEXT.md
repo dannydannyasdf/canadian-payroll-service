@@ -162,9 +162,9 @@ canadian-payroll-service/
 | `GET /payroll/employees?employerId=` | List employees (optional filter) |
 | `GET /demo` | Interactive demo (uses `DEMO_API_KEY`) |
 
-**Tax box mappings (simplified YTD → boxes):**
-- **T4:** 14 gross, 16 CPP (box 17 for QC/QPP), 18 EI, 22 income tax, 24/26 = gross
-- **Relevé 1:** A gross, B CPP/QPP, C EI, E income tax, G/I = gross
+**Tax box mappings (YTD → boxes):**
+- **T4:** 14 gross, 16 CPP (box 17 for QC/QPP), 18 EI, **22 federal income tax**, 24/26 = gross
+- **Relevé 1:** A gross, B CPP/QPP, C EI, **E Québec provincial income tax**, G/I = gross
 
 **Branding on every PDF page:**
 - **Left:** client logo (`PAYROLL_CLIENT_LOGO_PATH`)
@@ -179,7 +179,7 @@ canadian-payroll-service/
 - **Sensitive data:** Names, addresses, salaries, SINs — treat as PII; never log or commit secrets.
 - **SIN:** Format `XXX-XXX-XXX`; Luhn checksum; must not start with 0 or 8. Sample SIN: `130-692-544`.
 - **Sample client employer:** `Acme Productions Ltd.` (plain name in pay payloads).
-- **Net pay:** Must equal `grossPay − cpp − ei − incomeTax`; API rejects mismatch.
+- **Net pay:** Must equal `grossPay − cpp − ei − qpip − federalIncomeTax − provincialIncomeTax`; `incomeTax` on ingress is the total of both.
 - **Duplicate pay periods:** Same employee + period start + period end → **409 Conflict**, no YTD change.
 - **Employment province** (T4 box 10, RQ eligibility): `employee.employmentProvince` → `employee.address.province` → `PAYROLL_DEFAULT_EMPLOYMENT_PROVINCE` (**ON**). Do **not** use GP's Montréal QC address as the employment province default.
 - **QC employees:** T4 uses box **17** (QPP) instead of box **16** (CPP). Relevé 1 e-file applies only to **QC** employment province.
@@ -196,7 +196,7 @@ canadian-payroll-service/
 ### Revenu Québec e-file specifics
 
 - **Official namespace:** `http://www.mrq.gouv.qc.ca/T5` with `VersionSchema="2025.1"` on `<Transmission>`.
-- **Structure:** `<Transmission>` → `<P>` (preparer block) + `<Groupe01>` → `<R>` slips + `<T>` employer summary.
+- **Structure:** `<Transmission>` → `<P>` (preparer block) + one or more `<Groupe01>` blocks (one per employer). Each group contains `<R>` slips for that employer plus a single `<T>` employer summary whose `<NbReleves>` matches the slip count in that group.
 - **Amounts:** Comma decimal format in official XML (e.g. `10000,00`).
 - **Partner registration vs preparer number:** These are different identifiers:
   - `PAYROLL_RQ_PARTNER_REGISTRATION=I1000625` — Gamma Personnel partner registration (business reference).

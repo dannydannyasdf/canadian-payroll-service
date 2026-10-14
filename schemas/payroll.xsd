@@ -13,6 +13,8 @@
         <xs:element name="earnings" type="EarningsType"/>
         <xs:element name="deductions" type="DeductionsType"/>
         <xs:element name="netPay" type="MoneyType"/>
+        <xs:element name="comments" type="xs:string" minOccurs="0"/>
+        <xs:element name="comments2" type="xs:string" minOccurs="0"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -49,6 +51,8 @@
       <xs:element name="cpp" type="MoneyType"/>
       <xs:element name="ei" type="MoneyType"/>
       <xs:element name="incomeTax" type="MoneyType"/>
+      <xs:element name="federalIncomeTax" type="MoneyType" minOccurs="0"/>
+      <xs:element name="provincialIncomeTax" type="MoneyType" minOccurs="0"/>
       <xs:element name="qpip" type="MoneyType" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>

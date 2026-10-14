@@ -301,6 +301,27 @@ def _build_official_t_summary(slips: list[Releve1SlipPreview], tax_year: int) ->
     return t_el
 
 
+def _group_slips_by_employer(slips: list[Releve1SlipPreview]) -> list[list[Releve1SlipPreview]]:
+    """Group RL-1 slips so each employer gets its own Groupe01 / Releve1Return."""
+    groups: dict[str, list[Releve1SlipPreview]] = {}
+    order: list[str] = []
+    for slip in slips:
+        employer_key = slip.employer.name
+        if employer_key not in groups:
+            groups[employer_key] = []
+            order.append(employer_key)
+        groups[employer_key].append(slip)
+    return [groups[key] for key in order]
+
+
+def _build_official_groupe01(slips: list[Releve1SlipPreview], tax_year: int) -> etree._Element:
+    groupe = etree.Element("Groupe01")
+    for slip in slips:
+        groupe.append(_build_official_r_slip(slip))
+    groupe.append(_build_official_t_summary(slips, tax_year))
+    return groupe
+
+
 def build_official_rq_submission_xml(slips: list[Releve1SlipPreview], tax_year: int) -> str:
     if not slips:
         raise RqFilingNotFoundError(tax_year)
@@ -309,10 +330,8 @@ def build_official_rq_submission_xml(slips: list[Releve1SlipPreview], tax_year: 
     root.set("VersionSchema", RQ_SCHEMA_VERSION)
     root.append(_build_official_p_block(tax_year))
 
-    groupe = etree.SubElement(root, "Groupe01")
-    for slip in slips:
-        groupe.append(_build_official_r_slip(slip))
-    groupe.append(_build_official_t_summary(slips, tax_year))
+    for employer_slips in _group_slips_by_employer(slips):
+        root.append(_build_official_groupe01(employer_slips, tax_year))
 
     xml_bytes = etree.tostring(
         root,
@@ -391,10 +410,11 @@ def build_preview_rq_submission_xml(slips: list[Releve1SlipPreview], tax_year: i
     root.set("status", "preview")
     root.append(_build_transmitter())
 
-    releve_return = etree.SubElement(root, "Releve1Return")
-    releve_return.append(_build_releve1_summary(slips))
-    for slip in slips:
-        releve_return.append(_build_releve1_slip(slip))
+    for employer_slips in _group_slips_by_employer(slips):
+        releve_return = etree.SubElement(root, "Releve1Return")
+        releve_return.append(_build_releve1_summary(employer_slips))
+        for slip in employer_slips:
+            releve_return.append(_build_releve1_slip(slip))
 
     xml_bytes = etree.tostring(
         root,

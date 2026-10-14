@@ -1,14 +1,21 @@
-"""Payroll deduction calculation service (CRA T4127)."""
+"""Payroll deduction calculation service (CRA T4127 + Revenu Québec TP-1015.F-V)."""
 
 from __future__ import annotations
 
 from decimal import ROUND_HALF_UP, Decimal
 
-from app.models.deductions import CalculateDeductionsRequest, CalculateDeductionsResponse, FederalTaxBreakdown
+from app.models.deductions import (
+    CalculateDeductionsRequest,
+    CalculateDeductionsResponse,
+    FederalTaxBreakdown,
+    QuebecTaxBreakdown,
+)
+from app.tax.rq.provincial import QuebecTaxInput, calculate_quebec_income_tax
 from app.tax.t4127.cpp_ei import CppEiInput, calculate_cpp_ei
 from app.tax.t4127.federal import FederalTaxInput, calculate_federal_income_tax
 
 MONEY_QUANT = Decimal("0.01")
+QC_PROVINCE = "QC"
 
 
 def _money(value: Decimal) -> Decimal:
@@ -32,6 +39,7 @@ def calculate_payroll_deductions(payload: CalculateDeductionsRequest) -> Calcula
 
     cpp = payload.cpp if payload.cpp is not None else cpp_ei.cpp
     ei = payload.ei if payload.ei is not None else cpp_ei.ei
+    qpip = cpp_ei.qpip
 
     federal_result = calculate_federal_income_tax(
         FederalTaxInput(
@@ -49,7 +57,34 @@ def calculate_payroll_deductions(payload: CalculateDeductionsRequest) -> Calcula
         )
     )
 
-    net_pay = _money(payload.gross_pay - cpp - ei - cpp_ei.qpip - federal_result.federal_income_tax)
+    provincial = Decimal("0")
+    quebec_breakdown: QuebecTaxBreakdown | None = None
+    if payload.province == QC_PROVINCE:
+        quebec_result = calculate_quebec_income_tax(
+            QuebecTaxInput(
+                gross_pay=payload.gross_pay,
+                cpp=cpp,
+                ei=ei,
+                qpip=qpip,
+                pay_periods_per_year=payload.pay_periods_per_year,
+                provincial_claim_code=payload.provincial_claim_code,
+                insurable_earnings=payload.insurable_earnings or payload.gross_pay,
+                ytd_bonus_taxable=payload.ytd_bonus_taxable,
+                ytd_cpp_additional_deduction=payload.ytd_cpp_additional_deduction,
+                pension_months=payload.pension_months,
+                additional_tax_per_period=payload.additional_tax_per_period,
+            )
+        )
+        provincial = quebec_result.provincial_income_tax
+        quebec_breakdown = QuebecTaxBreakdown(
+            annualTaxableIncome=quebec_result.annual_taxable_income,
+            annualBasicQuebecTax=quebec_result.annual_basic_quebec_tax,
+            annualQuebecTax=quebec_result.annual_quebec_tax,
+            provincialIncomeTax=quebec_result.provincial_income_tax,
+        )
+
+    total_tax = _money(federal_result.federal_income_tax + provincial)
+    net_pay = _money(payload.gross_pay - cpp - ei - qpip - total_tax)
 
     federal = FederalTaxBreakdown(
         annualTaxableIncome=federal_result.annual_taxable_income,
@@ -57,13 +92,17 @@ def calculate_payroll_deductions(payload: CalculateDeductionsRequest) -> Calcula
         annualFederalTax=federal_result.annual_federal_tax,
         federalIncomeTax=federal_result.federal_income_tax,
         cppAdditionalDeduction=federal_result.cpp_additional_deduction,
+        provincialIncomeTax=provincial if provincial > 0 else None,
     )
     return CalculateDeductionsResponse(
         cpp=cpp,
         cpp2=cpp_ei.cpp2,
         ei=ei,
-        qpip=cpp_ei.qpip,
-        incomeTax=federal_result.federal_income_tax,
+        qpip=qpip,
+        federalIncomeTax=federal_result.federal_income_tax,
+        provincialIncomeTax=provincial,
+        incomeTax=total_tax,
         netPay=net_pay,
         federal=federal,
+        quebec=quebec_breakdown,
     )
